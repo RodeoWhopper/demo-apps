@@ -1,0 +1,26 @@
+# web (Vite)
+web/node_modules/
+web/dist/
+web/.vite/
+web/*.local
+
+# api (.NET)
+api/bin/
+api/obj/
+api/out/
+api/*.user
+api/*.suo
+.vs/
+.vscode/
+.idea/
+
+# local data (SQLite)
+api/data/*
+!api/data/.gitkeep
+*.db
+*.db-shm
+*.db-wal
+
+# env
+.env
+.DS_Store

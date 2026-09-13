@@ -1,0 +1,47 @@
+{{define "layout"}}<!doctype html>
+<html lang="tr" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{block "title" .}}{{.Brand}}{{end}}</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: {
+        ink: { 950: '#0b1020', 900: '#111a30', 800: '#1a2542', 700: '#26345a' },
+        amber: { 400: '#fbbf24', 500: '#f59e0b' }
+      }, fontFamily: { mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'] } } }
+    }
+  </script>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body class="min-h-full bg-ink-950 text-slate-100 antialiased flex flex-col">
+  <header class="border-b border-ink-700/60 bg-ink-900/70 backdrop-blur">
+    <div class="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between gap-4">
+      <a href="/" class="flex items-center gap-2 group">
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-amber-400 text-ink-950 font-black text-lg shadow-glow">k</span>
+        <span class="text-xl font-bold tracking-tight">Kısa<span class="text-amber-400">.link</span></span>
+      </a>
+      <nav class="flex items-center gap-1 text-sm">
+        <a href="/" class="px-3 py-1.5 rounded-md hover:bg-ink-800 {{if eq .Path "/"}}bg-ink-800 text-amber-300{{end}}">Kısalt</a>
+        <a href="/go/stats" class="px-3 py-1.5 rounded-md hover:bg-ink-800">Örnek istatistik</a>
+        <a href="/admin" class="px-3 py-1.5 rounded-md hover:bg-ink-800 {{if hasPrefix .Path "/admin"}}bg-ink-800 text-amber-300{{end}}">Yönetim</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="flex-1">
+    <div class="mx-auto max-w-5xl px-4 py-10">
+      {{template "content" .}}
+    </div>
+  </main>
+
+  <footer class="border-t border-ink-700/60 text-xs text-slate-500">
+    <div class="mx-auto max-w-5xl px-4 py-5 flex flex-wrap items-center justify-between gap-2">
+      <span>© {{.Year}} Kısa.link · Go + Gin + SQLite demo</span>
+      <span class="font-mono">GET /healthz · GET /api/links/:code</span>
+    </div>
+  </footer>
+</body>
+</html>{{end}}

@@ -1,0 +1,5 @@
+<nav class="pagination" role="navigation">
+    {{#if prev}}<a class="pagination__newer" href="{{page_url prev}}">← Daha yeni</a>{{/if}}
+    <span class="pagination__page">Sayfa {{page}} / {{pages}}</span>
+    {{#if next}}<a class="pagination__older" href="{{page_url next}}">Daha eski →</a>{{/if}}
+</nav>

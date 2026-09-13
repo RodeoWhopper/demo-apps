@@ -1,0 +1,16 @@
+{
+  "name": "kilavuz-etkinlik",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "directus start",
+    "bootstrap": "directus bootstrap",
+    "schema:apply": "directus schema apply --yes ./snapshot/schema.yaml"
+  },
+  "dependencies": {
+    "directus": "11.17.4"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

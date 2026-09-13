@@ -1,0 +1,52 @@
+<%- include('../partials/head') %>
+<div class="mx-auto max-w-xl">
+  <a href="/items" class="text-sm text-stone-500 hover:underline">&larr; Back to inventory</a>
+  <h1 class="mt-2 text-2xl font-bold"><%= mode === 'create' ? 'New item' : 'Edit ' + item.sku %></h1>
+
+  <% if (errors.length) { %>
+    <ul class="mt-4 list-disc rounded border border-red-300 bg-red-50 px-6 py-3 text-sm text-red-800">
+      <% errors.forEach(function (e) { %><li><%= e %></li><% }) %>
+    </ul>
+  <% } %>
+
+  <form method="post" action="<%= action %>" class="mt-5 grid grid-cols-1 gap-4 rounded-lg border border-stone-200 bg-white p-6 shadow-sm sm:grid-cols-2">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div>
+      <label class="block text-sm font-medium" for="sku">SKU</label>
+      <input id="sku" name="sku" value="<%= item.sku %>" placeholder="ABC-1234" required class="mt-1 w-full rounded border border-stone-300 px-3 py-2 font-mono text-sm uppercase">
+    </div>
+    <div>
+      <label class="block text-sm font-medium" for="category">Category</label>
+      <select id="category" name="category" class="mt-1 w-full rounded border border-stone-300 px-3 py-2 text-sm">
+        <% categories.forEach(function (c) { %>
+          <option value="<%= c %>" <%= item.category === c ? 'selected' : '' %>><%= c %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="sm:col-span-2">
+      <label class="block text-sm font-medium" for="name">Name</label>
+      <input id="name" name="name" value="<%= item.name %>" required class="mt-1 w-full rounded border border-stone-300 px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="block text-sm font-medium" for="quantity">Quantity</label>
+      <input id="quantity" name="quantity" type="number" min="0" step="1" value="<%= item.quantity %>" required class="mt-1 w-full rounded border border-stone-300 px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="block text-sm font-medium" for="reorderLevel">Reorder level</label>
+      <input id="reorderLevel" name="reorderLevel" type="number" min="0" step="1" value="<%= item.reorderLevel %>" required class="mt-1 w-full rounded border border-stone-300 px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="block text-sm font-medium" for="unitPrice">Unit price (USD)</label>
+      <input id="unitPrice" name="unitPrice" type="number" min="0" step="0.01" value="<%= item.unitPrice %>" required class="mt-1 w-full rounded border border-stone-300 px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="block text-sm font-medium" for="location">Bin location</label>
+      <input id="location" name="location" value="<%= item.location %>" placeholder="A-01-02" class="mt-1 w-full rounded border border-stone-300 px-3 py-2 font-mono text-sm">
+    </div>
+    <div class="flex items-center gap-3 sm:col-span-2">
+      <button class="rounded bg-depot-500 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-depot-400"><%= mode === 'create' ? 'Create item' : 'Save changes' %></button>
+      <a href="/items" class="text-sm text-stone-500 hover:underline">Cancel</a>
+    </div>
+  </form>
+</div>
+<%- include('../partials/foot') %>

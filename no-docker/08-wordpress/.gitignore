@@ -1,0 +1,7 @@
+.env
+*.log
+.DS_Store
+wp-content/uploads/
+wp-content/database/
+wp-content/upgrade/
+wp-content/upgrade-temp-backup/

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head><title>404 · Kütüphane Plus</title></head>
+<body>
+<main class="container py-5 flex-grow-1 text-center">
+  <p class="display-1 fw-bold text-secondary">404</p>
+  <h1 class="h3">Sayfa bulunamadı</h1>
+  <a class="btn btn-primary mt-2" th:href="@{/}">Kataloğa dön</a>
+</main>
+</body>
+</html>

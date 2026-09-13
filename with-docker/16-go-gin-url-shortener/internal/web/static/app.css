@@ -1,0 +1,4 @@
+/* Small additions on top of Tailwind. */
+.shadow-glow { box-shadow: 0 0 24px rgba(251, 191, 36, 0.35); }
+::selection { background: #fbbf24; color: #0b1020; }
+input:-webkit-autofill { -webkit-text-fill-color: #f1f5f9; box-shadow: 0 0 0 1000px #111a30 inset; }

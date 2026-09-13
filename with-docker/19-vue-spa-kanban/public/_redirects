@@ -1,0 +1,2 @@
+# Netlify: rewrite every path to the SPA shell (status 200, not a redirect)
+/*    /index.html   200

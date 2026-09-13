@@ -1,0 +1,52 @@
+{% extends "blog/base.html" %}
+{% load blog_extras %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block content %}
+<article class="essay">
+  {% if is_preview %}<p class="notice">Draft preview — only you and staff can see this page.</p>{% endif %}
+  <p class="eyebrow">
+    {% if post.category %}<a href="{{ post.category.get_absolute_url }}">{{ post.category.name }}</a> · {% endif %}
+    {% if post.published_at %}<time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|date:"j F Y" }}</time> · {% endif %}
+    {{ post.reading_minutes }} min read
+  </p>
+  <h1>{{ post.title }}</h1>
+  {% if post.excerpt %}<p class="lede">{{ post.excerpt }}</p>{% endif %}
+  <p class="byline">by {{ post.author.get_full_name|default:post.author.username }}
+    {% if user == post.author or user.is_staff %} · <a href="{% url 'post_edit' post.slug %}">Edit</a>{% endif %}
+  </p>
+  <div class="prose">{{ post.body|markdown }}</div>
+</article>
+
+{% if related %}
+<aside class="related">
+  <h3>More in {{ post.category.name }}</h3>
+  <ul>{% for r in related %}<li><a href="{{ r.get_absolute_url }}">{{ r.title }}</a></li>{% endfor %}</ul>
+</aside>
+{% endif %}
+
+<section class="comments" id="comments">
+  <h3>Margin notes <span class="muted">({{ comments|length }})</span></h3>
+  {% for c in comments %}
+    <div class="comment">
+      <p class="comment-meta"><strong>{{ c.author_name }}</strong> · <time>{{ c.created_at|date:"j M Y, H:i" }}</time></p>
+      <p>{{ c.body|linebreaksbr }}</p>
+    </div>
+  {% empty %}
+    <p class="muted">No notes in the margin yet.</p>
+  {% endfor %}
+
+  {% if not is_preview %}
+  <form method="post" class="form comment-form" action="{{ post.get_absolute_url }}#comments">
+    {% csrf_token %}
+    <h4>Leave a note</h4>
+    {{ form.non_field_errors }}
+    <div class="row">
+      <p class="field">{{ form.author_name.label_tag }} {{ form.author_name }} {{ form.author_name.errors }}</p>
+      <p class="field">{{ form.email.label_tag }} {{ form.email }} {{ form.email.errors }}</p>
+    </div>
+    <p class="field">{{ form.body.label_tag }} {{ form.body }} {{ form.body.errors }}</p>
+    <button type="submit" class="btn">Submit for moderation</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

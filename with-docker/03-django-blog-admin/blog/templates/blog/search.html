@@ -1,0 +1,18 @@
+{% extends "blog/base.html" %}
+{% block title %}Search{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Search</p>
+  <h1>{% if query %}Results for “{{ query }}”{% else %}Search the archive{% endif %}</h1>
+  <form action="{% url 'search' %}" method="get" class="form inline-form">
+    <input type="search" name="q" value="{{ query }}" placeholder="Try: typeface, margin, editing" aria-label="Search">
+    <button class="btn" type="submit">Search</button>
+  </form>
+</section>
+<section class="cards">
+  {% for post in posts %}{% include "blog/_post_card.html" %}{% empty %}
+    {% if query %}<p class="muted">Nothing matched. Try a broader word.</p>{% endif %}
+  {% endfor %}
+</section>
+{% include "blog/_pagination.html" %}
+{% endblock %}

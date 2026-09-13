@@ -1,0 +1,58 @@
+@page
+@model Helpdesk.Pages.Admin.CategoriesModel
+@{
+    ViewData["Title"] = "Kategoriler";
+    var editing = Model.Input.Id is not null;
+}
+<h1 class="h2 mb-1">Kategoriler</h1>
+<p class="text-muted">Bu sayfada <code>[Authorize]</code> yok; erişim yalnızca <code>Program.cs</code> içindeki <code>AuthorizeFolder("/Admin", "AdminOnly")</code> kuralıyla sağlanır.</p>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Ad</th><th>Açıklama</th><th class="text-center">Bilet</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var row in Model.Rows)
+                {
+                    <tr>
+                        <td class="fw-semibold">@row.Category.Name</td>
+                        <td class="small text-muted">@row.Category.Description</td>
+                        <td class="text-center">@row.TicketCount</td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-sm btn-outline-primary" asp-page="/Admin/Categories" asp-route-edit="@row.Category.Id">Düzenle</a>
+                            <form method="post" asp-page-handler="Delete" asp-route-id="@row.Category.Id" class="d-inline m-0" onsubmit="return confirm('Kategori silinsin mi?')">
+                                <button class="btn btn-sm btn-outline-danger" type="submit" disabled="@(row.TicketCount > 0)">Sil</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card p-4">
+            <h2 class="h5 mb-3">@(editing ? "Kategoriyi düzenle" : "Yeni kategori")</h2>
+            <form method="post" asp-page-handler="Save">
+                <input type="hidden" asp-for="Input.Id" />
+                <div class="mb-3">
+                    <label asp-for="Input.Name" class="form-label">Ad</label>
+                    <input asp-for="Input.Name" class="form-control" />
+                    <span asp-validation-for="Input.Name" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.Description" class="form-label">Açıklama</label>
+                    <input asp-for="Input.Description" class="form-control" />
+                    <span asp-validation-for="Input.Description" class="text-danger small"></span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">@(editing ? "Güncelle" : "Ekle")</button>
+                    @if (editing)
+                    {
+                        <a class="btn btn-outline-secondary" asp-page="/Admin/Categories">Vazgeç</a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

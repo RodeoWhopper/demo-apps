@@ -1,0 +1,12 @@
+{% extends "blog/base.html" %}
+{% block title %}{{ category.name }}{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Category</p>
+  <h1>{{ category.name }}</h1>
+  {% if category.description %}<p class="lede">{{ category.description }}</p>{% endif %}
+</section>
+<section class="cards">
+  {% for post in posts %}{% include "blog/_post_card.html" %}{% empty %}<p class="muted">No published essays in this category yet.</p>{% endfor %}
+</section>
+{% endblock %}

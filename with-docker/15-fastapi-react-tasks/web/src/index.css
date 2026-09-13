@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-space-950: #070b16;
+  --color-space-900: #0b1020;
+  --color-space-800: #131a2e;
+  --color-space-700: #1d2742;
+  --color-orbit-500: #7c6cff;
+  --color-orbit-400: #9d91ff;
+  --color-comet-400: #2dd4bf;
+  --color-flare-400: #fbbf24;
+}
+
+html, body, #root { min-height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(1200px 600px at 80% -10%, rgba(124, 108, 255, 0.18), transparent 60%),
+    radial-gradient(800px 400px at -10% 110%, rgba(45, 212, 191, 0.12), transparent 60%), #0b1020;
+  color: #e6e9f2;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}

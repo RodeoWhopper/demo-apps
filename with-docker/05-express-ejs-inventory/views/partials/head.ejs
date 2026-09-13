@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> · Depot Ninety</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { depot: { 50: "#fff8ed", 100: "#ffefd2", 400: "#f6a623", 500: "#e8890c", 600: "#c96f05", 700: "#a35405", 900: "#4a2604" } } } } };
+  </script>
+</head>
+<body class="min-h-full bg-stone-100 text-stone-800 antialiased">
+<header class="bg-stone-900 text-stone-100">
+  <div class="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+    <a href="/items" class="flex items-center gap-2 font-bold tracking-tight">
+      <span class="grid h-8 w-8 place-items-center rounded bg-depot-500 font-black text-stone-900">90</span>
+      <span>Depot <span class="text-depot-400">Ninety</span></span>
+    </a>
+    <nav class="flex items-center gap-4 text-sm">
+      <% if (user) { %>
+        <a href="/items" class="hover:text-depot-400 <%= currentPath.startsWith('/items') ? 'text-depot-400' : '' %>">Inventory</a>
+        <a href="/items/new" class="hover:text-depot-400">+ New item</a>
+        <% if (user.role === 'admin') { %>
+          <a href="/admin" class="rounded bg-depot-500/20 px-2 py-0.5 text-depot-400 ring-1 ring-depot-500/40 hover:bg-depot-500/30">Admin</a>
+        <% } %>
+        <span class="hidden text-stone-400 sm:inline"><%= user.username %> · <%= user.role %></span>
+        <form method="post" action="/logout">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="rounded border border-stone-600 px-2 py-0.5 hover:bg-stone-800">Sign out</button>
+        </form>
+      <% } else { %>
+        <a href="/login" class="rounded bg-depot-500 px-3 py-1 font-semibold text-stone-900 hover:bg-depot-400">Sign in</a>
+      <% } %>
+    </nav>
+  </div>
+</header>
+<main class="mx-auto max-w-6xl px-4 py-6">
+  <% (flash || []).forEach(function (f) { %>
+    <div class="mb-4 rounded border px-3 py-2 text-sm <%= f.type === 'success' ? 'border-green-300 bg-green-50 text-green-800' : f.type === 'warning' ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-red-300 bg-red-50 text-red-800' %>">
+      <%= f.message %>
+    </div>
+  <% }) %>

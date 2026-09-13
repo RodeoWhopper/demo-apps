@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head><title>Ödünçlerim · Kütüphane Plus</title></head>
+<body>
+<main class="container py-4 flex-grow-1">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <div>
+      <h1 class="h2 mb-0">Ödünçlerim</h1>
+      <p class="text-muted mb-0"><span th:text="${activeCount}">1</span> / <span th:text="${maxLoans}">3</span> aktif ödünç</p>
+    </div>
+    <a class="btn btn-outline-primary" th:href="@{/}">Kataloğa dön</a>
+  </div>
+  <div class="card">
+    <table class="table table-hover mb-0 align-middle">
+      <thead><tr><th>Kitap</th><th>Alındı</th><th>Son iade</th><th>Durum</th><th class="text-end"></th></tr></thead>
+      <tbody>
+        <tr th:each="loan : ${loans}">
+          <td><a th:href="@{/books/{id}(id=${loan.book.id})}" th:text="${loan.book.title}">Kitap</a><div class="small text-muted" th:text="${loan.book.author}">Yazar</div></td>
+          <td th:text="${#temporals.format(loan.borrowedAt, 'dd.MM.yyyy')}">01.01.2026</td>
+          <td th:text="${#temporals.format(loan.dueAt, 'dd.MM.yyyy')}">15.01.2026</td>
+          <td>
+            <span class="badge text-bg-success" th:if="${loan.status == 'ACTIVE'}">Sizde</span>
+            <span class="badge text-bg-danger" th:if="${loan.status == 'OVERDUE'}">Gecikmiş</span>
+            <span class="badge text-bg-secondary" th:if="${loan.status == 'RETURNED'}" th:text="'İade: ' + ${#temporals.format(loan.returnedAt, 'dd.MM.yyyy')}">İade</span>
+          </td>
+          <td class="text-end">
+            <form th:if="${loan.active}" th:action="@{/loans/{id}/return(id=${loan.id})}" method="post" class="m-0">
+              <button class="btn btn-sm btn-primary" type="submit">İade et</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(loans)}"><td colspan="5" class="text-center text-muted py-4">Henüz ödünç almadınız.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

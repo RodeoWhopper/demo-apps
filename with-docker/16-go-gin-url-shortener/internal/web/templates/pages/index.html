@@ -1,0 +1,87 @@
+{{define "title"}}{{.Title}} · {{.Brand}}{{end}}
+{{define "content"}}
+<section class="grid gap-10 lg:grid-cols-5">
+  <div class="lg:col-span-3">
+    <p class="text-amber-400 font-semibold text-sm uppercase tracking-widest">Kısa.link</p>
+    <h1 class="mt-2 text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">Uzun linkleri<br><span class="text-amber-400">kısaltın</span>, tıklamaları izleyin.</h1>
+    <p class="mt-4 text-slate-400 max-w-prose">Bir URL yapıştırın, isterseniz kendi takma adınızı seçin. Her kısa bağlantının herkese açık bir istatistik sayfası ve JSON API'si vardır.</p>
+
+    <form method="post" action="/shorten" class="mt-8 space-y-4" autocomplete="off">
+      <label class="block">
+        <span class="text-sm text-slate-300">Uzun URL</span>
+        <input name="url" type="text" required placeholder="https://ornek.com/cok/uzun/bir/adres?utm=..."
+               value="{{with .Form}}{{.URL}}{{end}}"
+               class="mt-1 w-full rounded-lg bg-ink-900 border border-ink-700 px-4 py-3 text-base placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+      </label>
+      <label class="block">
+        <span class="text-sm text-slate-300">Özel takma ad <span class="text-slate-500">(isteğe bağlı, 3-32 karakter)</span></span>
+        <div class="mt-1 flex rounded-lg border border-ink-700 bg-ink-900 focus-within:ring-2 focus-within:ring-amber-400">
+          <span class="px-3 py-3 text-slate-500 font-mono text-sm border-r border-ink-700 select-none">{{.BaseURL}}/</span>
+          <input name="alias" type="text" placeholder="kampanya-2026" pattern="[A-Za-z0-9_-]{3,32}"
+                 value="{{with .Form}}{{.Alias}}{{end}}"
+                 class="flex-1 bg-transparent px-3 py-3 font-mono text-sm placeholder:text-slate-600 focus:outline-none">
+        </div>
+      </label>
+      <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-amber-400 px-5 py-3 font-semibold text-ink-950 hover:bg-amber-500 transition">
+        Kısalt →
+      </button>
+    </form>
+
+    {{if .Error}}
+    <div role="alert" class="mt-6 rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-rose-200 text-sm">{{.Error}}</div>
+    {{end}}
+
+    {{with .Result}}
+    <div class="mt-6 rounded-xl border border-amber-400/40 bg-amber-400/5 p-5">
+      <p class="text-xs uppercase tracking-widest text-amber-300">Kısa bağlantınız hazır</p>
+      <div class="mt-2 flex flex-wrap items-center gap-3">
+        <a id="short-url" href="{{.ShortURL}}" class="font-mono text-lg sm:text-2xl text-amber-300 break-all">{{.ShortURL}}</a>
+        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('short-url').textContent);this.textContent='Kopyalandı ✓'"
+                class="rounded-md border border-amber-400/50 px-3 py-1 text-xs hover:bg-amber-400/10">Kopyala</button>
+      </div>
+      <p class="mt-2 text-sm text-slate-400 break-all">→ {{.URL}}</p>
+      <a href="{{.StatsURL}}" class="mt-3 inline-block text-sm text-slate-300 underline decoration-dotted hover:text-amber-300">İstatistik sayfası</a>
+    </div>
+    {{end}}
+  </div>
+
+  <aside class="lg:col-span-2 space-y-6">
+    <div class="grid grid-cols-2 gap-3">
+      <div class="rounded-xl bg-ink-900 border border-ink-700 p-4">
+        <p class="text-3xl font-bold">{{.Stats.Links}}</p>
+        <p class="text-xs uppercase tracking-wide text-slate-500">bağlantı</p>
+      </div>
+      <div class="rounded-xl bg-ink-900 border border-ink-700 p-4">
+        <p class="text-3xl font-bold text-amber-400">{{.Stats.Clicks}}</p>
+        <p class="text-xs uppercase tracking-wide text-slate-500">toplam tıklama</p>
+      </div>
+    </div>
+
+    <div class="rounded-xl bg-ink-900 border border-ink-700">
+      <div class="px-4 py-3 border-b border-ink-700 text-sm font-semibold">Son eklenenler</div>
+      <ul class="divide-y divide-ink-700/70">
+        {{range .Recent}}
+        <li class="px-4 py-3 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <a href="/{{.Code}}/stats" class="font-mono text-amber-300 hover:underline">/{{.Code}}</a>
+            <p class="truncate text-xs text-slate-500" title="{{.URL}}">{{trunc 48 .URL}}</p>
+          </div>
+          <span class="shrink-0 rounded-full bg-ink-800 px-2 py-0.5 text-xs text-slate-300">{{.Clicks}} tık</span>
+        </li>
+        {{else}}
+        <li class="px-4 py-6 text-sm text-slate-500">Henüz bağlantı yok.</li>
+        {{end}}
+      </ul>
+    </div>
+
+    <div class="rounded-xl bg-ink-900 border border-ink-700 p-4 text-xs">
+      <p class="font-semibold text-slate-300 mb-2">API ile kullanım</p>
+<pre class="overflow-x-auto rounded-md bg-ink-950 p-3 font-mono text-[11px] leading-relaxed text-slate-300">curl -X POST {{.BaseURL}}/shorten \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://go.dev","alias":"golang"}'
+
+curl {{.BaseURL}}/api/links/golang</pre>
+    </div>
+  </aside>
+</section>
+{{end}}

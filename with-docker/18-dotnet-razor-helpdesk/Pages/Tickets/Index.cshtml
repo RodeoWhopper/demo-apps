@@ -1,0 +1,70 @@
+@page
+@model Helpdesk.Pages.Tickets.IndexModel
+@{
+    ViewData["Title"] = "Biletler";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div>
+        <h1 class="h2 mb-0">@(Model.IsStaff ? "Tüm biletler" : "Biletlerim")</h1>
+        <p class="text-muted mb-0">@Model.Tickets.Count kayıt @(Model.IsStaff ? "" : "· yalnızca sizin açtığınız biletler")</p>
+    </div>
+    <a class="btn btn-primary" asp-page="/Tickets/Create">+ Yeni bilet</a>
+</div>
+
+<form method="get" class="card p-3 mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small mb-1" for="Q">Ara</label>
+            <input class="form-control" id="Q" name="Q" value="@Model.Q" placeholder="Başlık veya açıklama" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small mb-1" for="Status">Durum</label>
+            <select class="form-select" id="Status" name="Status">
+                <option value="">Tümü</option>
+                @foreach (TicketStatus s in Enum.GetValues<TicketStatus>())
+                {
+                    <option value="@s" selected="@(Model.Status == s)">@Labels.Status(s)</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small mb-1" for="Priority">Öncelik</label>
+            <select class="form-select" id="Priority" name="Priority">
+                <option value="">Tümü</option>
+                @foreach (TicketPriority p in Enum.GetValues<TicketPriority>())
+                {
+                    <option value="@p" selected="@(Model.Priority == p)">@Labels.Priority(p)</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button class="btn btn-outline-primary w-100" type="submit">Filtrele</button>
+            <a class="btn btn-outline-secondary" asp-page="/Tickets/Index" title="Temizle">×</a>
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <table class="table table-hover align-middle mb-0">
+        <thead><tr><th>#</th><th>Başlık</th><th>Kategori</th><th>Öncelik</th><th>Durum</th>@if (Model.IsStaff) { <th>Talep eden</th> }<th>Atanan</th><th>Açılış</th></tr></thead>
+        <tbody>
+        @foreach (var t in Model.Tickets)
+        {
+            <tr>
+                <td class="text-muted">@t.Id</td>
+                <td><a asp-page="/Tickets/Details" asp-route-id="@t.Id" class="fw-semibold text-decoration-none">@t.Title</a></td>
+                <td>@t.Category?.Name</td>
+                <td><span class="badge badge-priority-@t.Priority">@Labels.Priority(t.Priority)</span></td>
+                <td><span class="badge badge-status-@t.Status">@Labels.Status(t.Status)</span></td>
+                @if (Model.IsStaff) { <td>@t.Requester?.DisplayName</td> }
+                <td>@(t.Assignee?.DisplayName ?? "–")</td>
+                <td class="text-muted small text-nowrap">@t.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+            </tr>
+        }
+        @if (Model.Tickets.Count == 0)
+        {
+            <tr><td colspan="8" class="text-center text-muted py-4">Filtreye uyan bilet yok.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,428 @@
+openapi: 3.1.0
+info:
+  title: Scribble API
+  version: 1.0.0
+  description: |
+    A small JSON REST API for personal notes.
+
+    **Authentication** is stateless Bearer JWT (HS256):
+
+    1. `POST /auth/login` (or `/auth/register`) returns an `access_token` (15 min) and a `refresh_token` (7 days).
+    2. Send `Authorization: Bearer <access_token>` on every protected call.
+    3. When the access token expires, `POST /auth/refresh` with the refresh token to get a new pair.
+
+    Admin endpoints require the `role: admin` claim inside the access token.
+
+    Demo accounts: `admin@scribble.dev / Admin123!` (admin) and `demo@scribble.dev / Demo123!` (user).
+  contact:
+    name: Scribble demo
+servers:
+  - url: /
+    description: Same origin
+tags:
+  - name: system
+  - name: auth
+  - name: notes
+  - name: admin
+security:
+  - bearerAuth: []
+paths:
+  /healthz:
+    get:
+      tags: [system]
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: Service and database are reachable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  db: { type: string, example: ok }
+                  version: { type: string, example: 1.0.0 }
+                  users: { type: integer }
+                  notes: { type: integer }
+        "503": { $ref: "#/components/responses/ServiceUnavailable" }
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Create an account and receive tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email, example: new@scribble.dev }
+                password: { type: string, minLength: 8, example: Secret123! }
+                name: { type: string, example: New Person }
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "409":
+          description: Email already registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Exchange email + password for tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email, example: demo@scribble.dev }
+                password: { type: string, example: Demo123! }
+      responses:
+        "200":
+          description: Tokens issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: Mint a new token pair from a refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        "200":
+          description: New token pair
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TokenPair" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Current user (from the access token)
+      responses:
+        "200":
+          description: The authenticated user and selected token claims
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: "#/components/schemas/User" }
+                  claims:
+                    type: object
+                    properties:
+                      sub: { type: string }
+                      role: { type: string }
+                      exp: { type: integer }
+                      jti: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /notes:
+    get:
+      tags: [notes]
+      summary: List my notes
+      parameters:
+        - in: query
+          name: tag
+          schema: { type: string }
+          description: Only notes carrying this tag (exact, case-insensitive)
+        - in: query
+          name: q
+          schema: { type: string }
+          description: Case-insensitive substring search in title and body
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: Paginated notes (pinned first, then most recently updated)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Note" }
+                  page: { type: integer }
+                  per_page: { type: integer }
+                  total: { type: integer }
+                  filters:
+                    type: object
+                    properties:
+                      tag: { type: [string, "null"] }
+                      q: { type: [string, "null"] }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [notes]
+      summary: Create a note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NoteInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+  /notes/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [notes]
+      summary: Get one of my notes
+      responses:
+        "200":
+          description: The note
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [notes]
+      summary: Partially update one of my notes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NotePatch" }
+      responses:
+        "200":
+          description: Updated note
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+    delete:
+      tags: [notes]
+      summary: Delete one of my notes
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /admin/users:
+    get:
+      tags: [admin]
+      summary: List all users (admin only)
+      responses:
+        "200":
+          description: Users with note counts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/User" }
+                  total: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /admin/users/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    delete:
+      tags: [admin]
+      summary: Delete a user and all their notes (admin only)
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+                  user_id: { type: integer }
+                  deleted_notes: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /admin/stats:
+    get:
+      tags: [admin]
+      summary: Usage statistics (admin only)
+      responses:
+        "200":
+          description: Aggregate numbers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      admins: { type: integer }
+                  notes:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      pinned: { type: integer }
+                  notes_per_user:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        email: { type: string }
+                        notes: { type: integer }
+                  top_tags:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        tag: { type: string }
+                        count: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Paste the `access_token` from /auth/login (without the "Bearer " prefix).
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: integer, example: 2 }
+        email: { type: string, example: demo@scribble.dev }
+        name: { type: string, example: Demo User }
+        role: { type: string, enum: [user, admin] }
+        created_at: { type: string, format: date-time }
+        note_count: { type: integer, description: Only present on /auth/me and admin listings }
+    TokenPair:
+      type: object
+      properties:
+        token_type: { type: string, example: Bearer }
+        access_token: { type: string }
+        expires_in: { type: integer, example: 900 }
+        refresh_token: { type: string }
+        refresh_expires_in: { type: integer, example: 604800 }
+    AuthResponse:
+      allOf:
+        - $ref: "#/components/schemas/TokenPair"
+        - type: object
+          properties:
+            user: { $ref: "#/components/schemas/User" }
+    Note:
+      type: object
+      properties:
+        id: { type: integer }
+        owner_id: { type: integer }
+        title: { type: string }
+        body: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        pinned: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    NoteInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, maxLength: 200, example: Meeting notes }
+        body: { type: string, example: "Agenda: roadmap, hiring" }
+        tags:
+          type: array
+          items: { type: string }
+          example: [work, meeting]
+        pinned: { type: boolean, default: false }
+    NotePatch:
+      type: object
+      description: Any subset of the note fields (at least one)
+      properties:
+        title: { type: string, maxLength: 200 }
+        body: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        pinned: { type: boolean }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string, example: validation_error }
+            message: { type: string }
+            details:
+              type: object
+              additionalProperties: { type: string }
+  responses:
+    BadRequest:
+      description: Malformed request (e.g. body is not JSON)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: Missing, invalid or expired token / bad credentials
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: Authenticated but lacking the required role
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Resource does not exist (or belongs to someone else)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ValidationError:
+      description: Field-level validation errors in `error.details`
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ServiceUnavailable:
+      description: Database not reachable
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head><title>Üyeler · Kütüphane Plus</title></head>
+<body>
+<main class="container py-4 flex-grow-1">
+  <h1 class="h2 mb-3">Üyeler</h1>
+  <div class="card">
+    <table class="table table-hover mb-0 align-middle">
+      <thead><tr><th>Ad</th><th>E-posta</th><th>Rol</th><th>Kayıt</th><th class="text-center">Aktif ödünç</th><th>Durum</th><th class="text-end"></th></tr></thead>
+      <tbody>
+        <tr th:each="entry : ${members}" th:with="m=${entry.key}">
+          <td th:text="${m.fullName}">Ad</td>
+          <td th:text="${m.email}">e-posta</td>
+          <td><span class="badge" th:classappend="${m.admin} ? 'badge-gold' : 'bg-secondary'" th:text="${m.role}">MEMBER</span></td>
+          <td th:text="${#temporals.format(m.createdAt, 'dd.MM.yyyy')}">01.01.2026</td>
+          <td class="text-center" th:text="${entry.value}">0</td>
+          <td><span class="badge" th:classappend="${m.active} ? 'text-bg-success' : 'text-bg-danger'" th:text="${m.active} ? 'Aktif' : 'Pasif'">Aktif</span></td>
+          <td class="text-end">
+            <form th:action="@{/admin/members/{id}/toggle(id=${m.id})}" method="post" class="m-0">
+              <button class="btn btn-sm btn-outline-secondary" type="submit" th:text="${m.active} ? 'Pasifleştir' : 'Aktifleştir'">Pasifleştir</button>
+            </form>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

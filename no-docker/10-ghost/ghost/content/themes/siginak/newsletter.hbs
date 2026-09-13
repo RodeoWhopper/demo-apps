@@ -1,0 +1,21 @@
+{{!< default}}
+
+<section class="hero hero--compact">
+    <div class="container narrow">
+        <p class="eyebrow">Bülten</p>
+        <h1 class="hero__title">Sığınak Bülteni</h1>
+        <p class="hero__lead">Her cumartesi sabahı gelen kutunuza düşen kısa mektuplar: şehir, yürüyüş ve yavaş yaşam üzerine.</p>
+        {{> "subscribe"}}
+    </div>
+</section>
+
+<section class="container">
+    <div class="post-feed">
+        {{#foreach posts}}
+            {{> "post-card"}}
+        {{else}}
+            <p class="empty">Henüz bülten sayısı yayımlanmadı.</p>
+        {{/foreach}}
+    </div>
+    {{pagination}}
+</section>

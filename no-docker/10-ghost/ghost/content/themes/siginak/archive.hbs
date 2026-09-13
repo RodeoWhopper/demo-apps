@@ -1,0 +1,19 @@
+{{!< default}}
+
+<section class="page-head container narrow">
+    <p class="eyebrow">Arşiv</p>
+    <h1>Tüm yazılar</h1>
+</section>
+
+<section class="container narrow">
+    <ul class="archive-list">
+        {{#foreach posts}}
+        <li class="archive-list__item">
+            <time datetime="{{date format="YYYY-MM-DD"}}">{{date format="DD.MM.YYYY"}}</time>
+            <a href="{{url}}">{{title}}</a>
+            {{#if primary_tag}}<span class="archive-list__tag">{{primary_tag.name}}</span>{{/if}}
+        </li>
+        {{/foreach}}
+    </ul>
+    {{pagination}}
+</section>

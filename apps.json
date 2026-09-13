@@ -47,7 +47,11 @@
         "admin": []
       },
       "persistence": "none (fully static; contact form is client-side only and posts nowhere)",
-      "notes": "No build step. Serve the folder root as document root. nginx.conf maps unknown paths to the custom 404.html; python http.server (serve.sh) does not."
+      "notes": "No build step. Serve the folder root as document root. nginx.conf maps unknown paths to the custom 404.html; python http.server (serve.sh) does not.",
+      "paths": {
+        "with_docker": "with-docker/01-static-landing",
+        "no_docker": "no-docker/01-static-landing"
+      }
     },
     {
       "name": "nextjs-saas-dashboard",
@@ -150,7 +154,11 @@
         ]
       },
       "persistence": "JSON file at data/db.json (DATA_DIR), auto-created and seeded with 3 users + 8 projects on first request; role changes are written back to it.",
-      "notes": "Requires a writable DATA_DIR (Docker: mount a volume at /app/data). `npm start` runs the Next.js standalone server (.next/standalone/server.js) produced by `npm run build`; the build's postbuild step copies static assets into it. Smoke test: POST /api/login with JSON {email,password} using a cookie jar, then GET /dashboard (200) vs. without cookie (307 to /login). `npm audit` reports advisories only in Next's bundled postcss (transitive; fix requires Next 16)."
+      "notes": "Requires a writable DATA_DIR (Docker: mount a volume at /app/data). `npm start` runs the Next.js standalone server (.next/standalone/server.js) produced by `npm run build`; the build's postbuild step copies static assets into it. Smoke test: POST /api/login with JSON {email,password} using a cookie jar, then GET /dashboard (200) vs. without cookie (307 to /login). `npm audit` reports advisories only in Next's bundled postcss (transitive; fix requires Next 16).",
+      "paths": {
+        "with_docker": "with-docker/02-nextjs-saas-dashboard",
+        "no_docker": "no-docker/02-nextjs-saas-dashboard"
+      }
     },
     {
       "name": "django-blog-admin",
@@ -261,7 +269,11 @@
         ]
       },
       "persistence": "SQLite file at data/db.sqlite3 (DJANGO_DB_PATH); Docker image stores it at /app/data (declared VOLUME). Created by `migrate`, seeded idempotently by `seed_demo` (entrypoint.sh runs both on every start).",
-      "notes": "Single container, no external services. entrypoint.sh runs migrate -> collectstatic -> seed_demo -> gunicorn on $PORT (8003). Mount a writable volume at /app/data to keep posts across restarts. When served over HTTPS via a reverse proxy set DJANGO_CSRF_TRUSTED_ORIGINS to the public origin, otherwise login/comment form POSTs fail CSRF checks. Static files are served by WhiteNoise from the same process (no separate static server needed). Requires Python 3.12+ locally (verified on 3.14; Docker image uses 3.12)."
+      "notes": "Single container, no external services. entrypoint.sh runs migrate -> collectstatic -> seed_demo -> gunicorn on $PORT (8003). Mount a writable volume at /app/data to keep posts across restarts. When served over HTTPS via a reverse proxy set DJANGO_CSRF_TRUSTED_ORIGINS to the public origin, otherwise login/comment form POSTs fail CSRF checks. Static files are served by WhiteNoise from the same process (no separate static server needed). Requires Python 3.12+ locally (verified on 3.14; Docker image uses 3.12).",
+      "paths": {
+        "with_docker": "with-docker/03-django-blog-admin",
+        "no_docker": "no-docker/03-django-blog-admin"
+      }
     },
     {
       "name": "flask-jwt-notes-api",
@@ -386,7 +398,11 @@
         ]
       },
       "persistence": "SQLite file at data/scribble.db (DATABASE_PATH); Docker image stores it at /app/data (declared VOLUME). Tables are created and demo data seeded automatically on first start (create_app), or explicitly with `flask --app app seed`.",
-      "notes": "Single container, no external services. Startup is safe with multiple gunicorn workers (concurrent create_all/seed is tolerated). The docs page loads swagger-ui-dist from cdn.jsdelivr.net at browser time; the API itself has no runtime network dependency. GET / redirects (302) to /docs. Mount a writable volume at /app/data to keep data across restarts."
+      "notes": "Single container, no external services. Startup is safe with multiple gunicorn workers (concurrent create_all/seed is tolerated). The docs page loads swagger-ui-dist from cdn.jsdelivr.net at browser time; the API itself has no runtime network dependency. GET / redirects (302) to /docs. Mount a writable volume at /app/data to keep data across restarts.",
+      "paths": {
+        "with_docker": "with-docker/04-flask-jwt-notes-api",
+        "no_docker": "no-docker/04-flask-jwt-notes-api"
+      }
     },
     {
       "name": "express-ejs-inventory",
@@ -488,7 +504,11 @@
         ]
       },
       "persistence": "lowdb JSON file at data/inventory.json (DATA_DIR), auto-created and seeded with 2 users, 3 categories and 15 items on first start. Sessions live in process memory and are lost on restart.",
-      "notes": "Needs a writable DATA_DIR (Docker: mount a volume at /app/data). Single-process only (MemoryStore); express-session prints a MemoryStore warning in production - expected for this demo. Tailwind is loaded from cdn.tailwindcss.com in the browser, so end users need internet access for styling (the server itself makes no outbound calls). Smoke test: GET /login with a cookie jar, scrape `name=\"_csrf\" value=\"...\"`, POST /login (form-urlencoded: _csrf, username, password) -> 302 to /items, then GET /items -> 200; GET /admin as clerk -> 403, as admin -> 200. `npm audit` reports 2 moderate advisories in Express 4's transitive `qs`; the fix would be Express 5."
+      "notes": "Needs a writable DATA_DIR (Docker: mount a volume at /app/data). Single-process only (MemoryStore); express-session prints a MemoryStore warning in production - expected for this demo. Tailwind is loaded from cdn.tailwindcss.com in the browser, so end users need internet access for styling (the server itself makes no outbound calls). Smoke test: GET /login with a cookie jar, scrape `name=\"_csrf\" value=\"...\"`, POST /login (form-urlencoded: _csrf, username, password) -> 302 to /items, then GET /items -> 200; GET /admin as clerk -> 403, as admin -> 200. `npm audit` reports 2 moderate advisories in Express 4's transitive `qs`; the fix would be Express 5.",
+      "paths": {
+        "with_docker": "with-docker/05-express-ejs-inventory",
+        "no_docker": "no-docker/05-express-ejs-inventory"
+      }
     },
     {
       "name": "php-vanilla-admin",
@@ -570,7 +590,11 @@
         ]
       },
       "persistence": "sqlite file at data/bakkal.sqlite (Docker volume /var/www/html/data), auto-created + seeded with 2 users, 10 products, 6 orders on first request",
-      "notes": "No Composer, no build step. Docker image runs Apache on 8006 with DocumentRoot=public and mod_rewrite; mount a volume at /var/www/html/data to keep the database. Apache must be able to write to data/ (owned by www-data in the image). For a non-Docker deployment the web server must route all requests to public/index.php."
+      "notes": "No Composer, no build step. Docker image runs Apache on 8006 with DocumentRoot=public and mod_rewrite; mount a volume at /var/www/html/data to keep the database. Apache must be able to write to data/ (owned by www-data in the image). For a non-Docker deployment the web server must route all requests to public/index.php.",
+      "paths": {
+        "with_docker": "with-docker/06-php-vanilla-admin",
+        "no_docker": "no-docker/06-php-vanilla-admin"
+      }
     },
     {
       "name": "laravel-crm",
@@ -684,7 +708,11 @@
         ]
       },
       "persistence": "sqlite file (image default /data/database.sqlite on the /data volume; local default database/database.sqlite). Entrypoint runs migrate --force --seed on every start; the seeder is idempotent (skips when a user exists) and creates 2 users, 20 contacts, 15 deals.",
-      "notes": "Runs `php artisan serve` inside php:8.3-cli as root (fine for a demo; put a reverse proxy in front for TLS). No Node/Vite build step - Tailwind comes from a CDN. Mount a volume at /data to persist the database. Provide APP_KEY to keep sessions valid across restarts. First start takes ~5-10 s (migrate + optimize)."
+      "notes": "Runs `php artisan serve` inside php:8.3-cli as root (fine for a demo; put a reverse proxy in front for TLS). No Node/Vite build step - Tailwind comes from a CDN. Mount a volume at /data to persist the database. Provide APP_KEY to keep sessions valid across restarts. First start takes ~5-10 s (migrate + optimize).",
+      "paths": {
+        "with_docker": "with-docker/07-laravel-crm",
+        "no_docker": "no-docker/07-laravel-crm"
+      }
     },
     {
       "name": "wordpress-docker",
@@ -810,7 +838,11 @@
         ]
       },
       "persistence": "Named volumes: db_data (MariaDB), wp_core (/var/www/html incl. wp-config.php), wp_content (uploads/plugins). Theme and mu-plugin are bind-mounted from the repo. Content is created by setup.sh into the database.",
-      "notes": "Docker-only. After `docker compose up -d` you MUST run ./setup.sh once (idempotent, ~1-2 min) – it waits for MariaDB, runs `wp core install`, activates the theme and seeds pages/projects/menu via the wpcli sidecar (compose profile 'cli', never started by `up`). Until then the health route redirects to the install wizard. To serve from another domain set WP_HOME and WP_SITEURL in .env before running setup.sh (or afterwards – constants override DB values). Only port 8008 is published; MariaDB is internal. XML-RPC is disabled. The wpcli service runs as uid 33 to match the Apache image."
+      "notes": "Docker-only. After `docker compose up -d` you MUST run ./setup.sh once (idempotent, ~1-2 min) – it waits for MariaDB, runs `wp core install`, activates the theme and seeds pages/projects/menu via the wpcli sidecar (compose profile 'cli', never started by `up`). Until then the health route redirects to the install wizard. To serve from another domain set WP_HOME and WP_SITEURL in .env before running setup.sh (or afterwards – constants override DB values). Only port 8008 is published; MariaDB is internal. XML-RPC is disabled. The wpcli service runs as uid 33 to match the Apache image.",
+      "paths": {
+        "with_docker": "with-docker/08-wordpress-docker",
+        "no_docker": "no-docker/08-wordpress"
+      }
     },
     {
       "name": "strapi-headless-cms",
@@ -937,7 +969,11 @@
         ]
       },
       "persistence": "SQLite at cms/.tmp/data.db (Docker volume cms_data at /opt/app/.tmp) auto-created and seeded on first boot; uploads in cms/public/uploads (Docker volume cms_uploads).",
-      "notes": "Two services: Strapi on 1337 (main) and the static frontend on 8009 (nginx, `frontend/` dir; locally any static server works). The admin user is NOT created automatically: after the first start run scripts/create-admin.sh (local) or scripts/create-admin.sh --docker (compose), or complete the form shown on the first visit to /admin. Health endpoint /_health returns 204 (not 200). The CMS Docker build compiles better-sqlite3 on alpine and takes several minutes. If the frontend is not served from localhost, set window.API_URL in frontend/config.js to the public CMS URL and set CORS_ORIGIN accordingly. Demo secrets are provided as compose fallbacks; override via cms/.env for real deployments."
+      "notes": "Two services: Strapi on 1337 (main) and the static frontend on 8009 (nginx, `frontend/` dir; locally any static server works). The admin user is NOT created automatically: after the first start run scripts/create-admin.sh (local) or scripts/create-admin.sh --docker (compose), or complete the form shown on the first visit to /admin. Health endpoint /_health returns 204 (not 200). The CMS Docker build compiles better-sqlite3 on alpine and takes several minutes. If the frontend is not served from localhost, set window.API_URL in frontend/config.js to the public CMS URL and set CORS_ORIGIN accordingly. Demo secrets are provided as compose fallbacks; override via cms/.env for real deployments.",
+      "paths": {
+        "with_docker": "with-docker/09-strapi-headless-cms",
+        "no_docker": "no-docker/09-strapi-headless-cms"
+      }
     },
     {
       "name": "ghost-docker",
@@ -1059,7 +1095,11 @@
         ]
       },
       "persistence": "Named volumes db_data (MySQL) and ghost_content (/var/lib/ghost/content: images, files, logs). Theme (content/themes/siginak) and content/settings/routes.yaml are bind-mounted from the repo. Owner, settings, page and posts are created by scripts/setup-owner.sh when missing.",
-      "notes": "Docker-only. After `docker compose up -d`, wait for GET /ghost/api/admin/site/ = 200 (Ghost needs ~20 s to create its MySQL schema on first boot) and run scripts/setup-owner.sh once (idempotent; needs curl + python3 on the host). Without it the site is up but /ghost/ shows Ghost's setup wizard and the default Casper theme is active. Only port 8010 is published; MySQL is internal. No SMTP is configured, so member e-mails/newsletters are not sent; STAFF_DEVICE_VERIFICATION must stay false unless SMTP is configured. GHOST_URL must equal the externally visible URL or Ghost will generate wrong links/redirects."
+      "notes": "Docker-only. After `docker compose up -d`, wait for GET /ghost/api/admin/site/ = 200 (Ghost needs ~20 s to create its MySQL schema on first boot) and run scripts/setup-owner.sh once (idempotent; needs curl + python3 on the host). Without it the site is up but /ghost/ shows Ghost's setup wizard and the default Casper theme is active. Only port 8010 is published; MySQL is internal. No SMTP is configured, so member e-mails/newsletters are not sent; STAFF_DEVICE_VERIFICATION must stay false unless SMTP is configured. GHOST_URL must equal the externally visible URL or Ghost will generate wrong links/redirects.",
+      "paths": {
+        "with_docker": "with-docker/10-ghost-docker",
+        "no_docker": "no-docker/10-ghost"
+      }
     },
     {
       "name": "directus-docker",
@@ -1174,7 +1214,11 @@
         ]
       },
       "persistence": "Named volumes db_data (Postgres), directus_uploads, directus_extensions. Data model versioned in snapshot/schema.yaml (bind-mounted at /directus/snapshot). Seed data inserted by scripts/bootstrap.sh when collections are empty.",
-      "notes": "Docker-only. After `docker compose up -d` wait for GET /server/health = 200 (Directus creates its system tables and the admin user from ADMIN_EMAIL/ADMIN_PASSWORD on first boot), then run scripts/bootstrap.sh once (idempotent; needs python3 on the host; honours DIRECTUS_URL). Alternative: `docker compose exec directus npx directus schema apply --yes /directus/snapshot/schema.yaml` first, then bootstrap.sh for permissions + seed. Frontend on 8111 is plain files from ./frontend served by nginx; if not on localhost, edit frontend/config.js (window.API_URL) and set PUBLIC_URL/CORS_ORIGIN. Postgres is internal only. Health returns 200 JSON."
+      "notes": "Docker-only. After `docker compose up -d` wait for GET /server/health = 200 (Directus creates its system tables and the admin user from ADMIN_EMAIL/ADMIN_PASSWORD on first boot), then run scripts/bootstrap.sh once (idempotent; needs python3 on the host; honours DIRECTUS_URL). Alternative: `docker compose exec directus npx directus schema apply --yes /directus/snapshot/schema.yaml` first, then bootstrap.sh for permissions + seed. Frontend on 8111 is plain files from ./frontend served by nginx; if not on localhost, edit frontend/config.js (window.API_URL) and set PUBLIC_URL/CORS_ORIGIN. Postgres is internal only. Health returns 200 JSON.",
+      "paths": {
+        "with_docker": "with-docker/11-directus-docker",
+        "no_docker": "no-docker/11-directus"
+      }
     },
     {
       "name": "sveltekit-shop",
@@ -1275,7 +1319,11 @@
         ]
       },
       "persistence": "JSON files in data/ (DATA_DIR): users.json, products.json (10 seeded pots), orders.json, sessions.json - created and seeded on first request, rewritten atomically on change. The cart lives client-side in the `tc_cart` cookie.",
-      "notes": "Needs a writable DATA_DIR (Docker: mount a volume at /app/data). Set ORIGIN to the public URL or every form submission (login included) fails with 403 'Cross-site POST form submissions are forbidden'. For curl smoke tests send `Origin: http://localhost:3012` and `Accept: text/html` on action POSTs: e.g. `curl -c jar -H 'Origin: http://localhost:3012' -H 'Accept: text/html' -X POST 'http://localhost:3012/login?/login' -d 'email=shopper@terracotta.shop&password=Shop123!'` -> 303, then `curl -b jar http://localhost:3012/account` -> 200 (without the cookie: 303 to /login). Without `Accept: text/html` SvelteKit answers action POSTs with 200 + JSON ({\"type\":\"redirect\"|\"failure\",...}). Actions without fields (checkout, logout) still need a form-encoded body (`-d ''`), otherwise 415. `npm audit` lists 3 low advisories in transitive dev tooling only."
+      "notes": "Needs a writable DATA_DIR (Docker: mount a volume at /app/data). Set ORIGIN to the public URL or every form submission (login included) fails with 403 'Cross-site POST form submissions are forbidden'. For curl smoke tests send `Origin: http://localhost:3012` and `Accept: text/html` on action POSTs: e.g. `curl -c jar -H 'Origin: http://localhost:3012' -H 'Accept: text/html' -X POST 'http://localhost:3012/login?/login' -d 'email=shopper@terracotta.shop&password=Shop123!'` -> 303, then `curl -b jar http://localhost:3012/account` -> 200 (without the cookie: 303 to /login). Without `Accept: text/html` SvelteKit answers action POSTs with 200 + JSON ({\"type\":\"redirect\"|\"failure\",...}). Actions without fields (checkout, logout) still need a form-encoded body (`-d ''`), otherwise 415. `npm audit` lists 3 low advisories in transitive dev tooling only.",
+      "paths": {
+        "with_docker": "with-docker/12-sveltekit-shop",
+        "no_docker": "no-docker/12-sveltekit-shop"
+      }
     },
     {
       "name": "nuxt-content-portfolio",
@@ -1328,7 +1376,11 @@
         "admin": []
       },
       "persistence": "none at runtime; content is markdown in content/ compiled into a SQLite dump at build time (Node's built-in node:sqlite, no native addon)",
-      "notes": "`npm run generate` = `nuxt generate && node scripts/postgenerate.mjs` (copies the pre-rendered /not-found page over 404.html). Static output only — serve .output/public. Do NOT use an SPA fallback to index.html; every route is a real HTML file and unknown paths should return the pre-rendered 404.html. Build needs Node >= 22.12 (uses node:sqlite). The RSS feed is a pre-rendered nitro route, so /rss.xml exists as a file in the output. `serve` is a devDependency, so run `npm ci` (not `--omit=dev`) before `npm start`-style preview, or use the nginx Dockerfile."
+      "notes": "`npm run generate` = `nuxt generate && node scripts/postgenerate.mjs` (copies the pre-rendered /not-found page over 404.html). Static output only — serve .output/public. Do NOT use an SPA fallback to index.html; every route is a real HTML file and unknown paths should return the pre-rendered 404.html. Build needs Node >= 22.12 (uses node:sqlite). The RSS feed is a pre-rendered nitro route, so /rss.xml exists as a file in the output. `serve` is a devDependency, so run `npm ci` (not `--omit=dev`) before `npm start`-style preview, or use the nginx Dockerfile.",
+      "paths": {
+        "with_docker": "with-docker/13-nuxt-content-portfolio",
+        "no_docker": "no-docker/13-nuxt-content-portfolio"
+      }
     },
     {
       "name": "astro-starlight-docs",
@@ -1382,7 +1434,11 @@
         "admin": []
       },
       "persistence": "none (static site; search index is static JSON/WASM under dist/pagefind/)",
-      "notes": "Serve dist/ as static files. Routes are directories with index.html (trailing slash); no SPA fallback — unknown paths should return 404.html. The /pagefind/ directory must be served (it is generated only by `npm run build`, not by `astro dev`). Node >= 18.20.8; built with Node 22."
+      "notes": "Serve dist/ as static files. Routes are directories with index.html (trailing slash); no SPA fallback — unknown paths should return 404.html. The /pagefind/ directory must be served (it is generated only by `npm run build`, not by `astro dev`). Node >= 18.20.8; built with Node 22.",
+      "paths": {
+        "with_docker": "with-docker/14-astro-starlight-docs",
+        "no_docker": "no-docker/14-astro-starlight-docs"
+      }
     },
     {
       "name": "fastapi-react-tasks",
@@ -1502,7 +1558,11 @@
         ]
       },
       "persistence": "SQLite file inside the api container at /app/data/orbit.db on the named volume orbit-api-data (created and seeded automatically at API startup). The web service is stateless static files.",
-      "notes": "services: api (FastAPI/uvicorn, container port 8015, published 8015, healthcheck /healthz) and web (nginx:1.27-alpine serving the built SPA, container port 5015, published 5015, depends_on api healthy). The web container's nginx.conf proxies /api/ -> http://api:8015/ (prefix stripped) and provides history-API fallback to index.html, so only port 5015 needs to be exposed publicly; 8015 is optional for direct API access/Swagger. VITE_API_URL is a BUILD-TIME arg for the web image - rebuild the web image to change it. Local (non-Docker) run needs two processes: uvicorn on 8015 and Vite on 5015 with VITE_API_URL=http://localhost:8015 and CORS_ORIGINS including http://localhost:5015."
+      "notes": "services: api (FastAPI/uvicorn, container port 8015, published 8015, healthcheck /healthz) and web (nginx:1.27-alpine serving the built SPA, container port 5015, published 5015, depends_on api healthy). The web container's nginx.conf proxies /api/ -> http://api:8015/ (prefix stripped) and provides history-API fallback to index.html, so only port 5015 needs to be exposed publicly; 8015 is optional for direct API access/Swagger. VITE_API_URL is a BUILD-TIME arg for the web image - rebuild the web image to change it. Local (non-Docker) run needs two processes: uvicorn on 8015 and Vite on 5015 with VITE_API_URL=http://localhost:8015 and CORS_ORIGINS including http://localhost:5015.",
+      "paths": {
+        "with_docker": "with-docker/15-fastapi-react-tasks",
+        "no_docker": "no-docker/15-fastapi-react-tasks"
+      }
     },
     {
       "name": "go-gin-url-shortener",
@@ -1598,7 +1658,11 @@
         ]
       },
       "persistence": "sqlite file at data/kisa.db (WAL mode; /data/kisa.db inside the container) – schema migrated and 5 demo links seeded on first start",
-      "notes": "Single static binary, no CGO needed. go.mod requires go >= 1.25 (Go toolchains >= 1.21 auto-download it). Container runs as uid 65532 (distroless nonroot): a named volume mounted at /data works out of the box, but a host bind-mount directory must be writable by uid 65532 (chown 65532:65532 ./data). Set BASE_URL to the externally visible origin so generated short links are correct."
+      "notes": "Single static binary, no CGO needed. go.mod requires go >= 1.25 (Go toolchains >= 1.21 auto-download it). Container runs as uid 65532 (distroless nonroot): a named volume mounted at /data works out of the box, but a host bind-mount directory must be writable by uid 65532 (chown 65532:65532 ./data). Set BASE_URL to the externally visible origin so generated short links are correct.",
+      "paths": {
+        "with_docker": "with-docker/16-go-gin-url-shortener",
+        "no_docker": "no-docker/16-go-gin-url-shortener"
+      }
     },
     {
       "name": "spring-boot-library",
@@ -1694,7 +1758,11 @@
         ]
       },
       "persistence": "H2 file database at ./data/library.mv.db (DB_PATH; /app/data inside the container) – schema managed by Hibernate ddl-auto=update, seeded with 10 books, 2 users and 3 loans when the members table is empty",
-      "notes": "Java/Maven are not required on the host when using Docker (multi-stage build compiles inside maven:3.9-eclipse-temurin-21). Without Docker, JDK 21 is required and ./mvnw downloads Maven 3.9.16 on first use (needs network). First Maven build downloads ~120 MB of dependencies. Container runs as non-root user 'app'; mount a writable volume at /app/data. Startup takes ~8-20 s before /actuator/health returns 200, so give the healthcheck a start period."
+      "notes": "Java/Maven are not required on the host when using Docker (multi-stage build compiles inside maven:3.9-eclipse-temurin-21). Without Docker, JDK 21 is required and ./mvnw downloads Maven 3.9.16 on first use (needs network). First Maven build downloads ~120 MB of dependencies. Container runs as non-root user 'app'; mount a writable volume at /app/data. Startup takes ~8-20 s before /actuator/health returns 200, so give the healthcheck a start period.",
+      "paths": {
+        "with_docker": "with-docker/17-spring-boot-library",
+        "no_docker": "no-docker/17-spring-boot-library"
+      }
     },
     {
       "name": "dotnet-razor-helpdesk",
@@ -1787,7 +1855,11 @@
         ]
       },
       "persistence": "SQLite file at data/helpdesk.db (WAL mode; /app/data/helpdesk.db in the container) created by EF Core migrations (Database.Migrate() at startup) and seeded with 3 roles, 3 users, 4 categories and 10 tickets when empty; Data Protection keys are stored in data/keys so cookies survive restarts",
-      "notes": "Requires the .NET 10 SDK to build (runtime image mcr.microsoft.com/dotnet/aspnet:10.0). Container runs as the non-root 'app' user (uid 1654); mount a writable volume at /app/data (named volume works out of the box, a bind mount must be writable by uid 1654). Run the app from a directory where wwwroot/ is available (publish output or project dir) – static CSS is served from wwwroot. Self-registration is open and creates Requester accounts."
+      "notes": "Requires the .NET 10 SDK to build (runtime image mcr.microsoft.com/dotnet/aspnet:10.0). Container runs as the non-root 'app' user (uid 1654); mount a writable volume at /app/data (named volume works out of the box, a bind mount must be writable by uid 1654). Run the app from a directory where wwwroot/ is available (publish output or project dir) – static CSS is served from wwwroot. Self-registration is open and creates Requester accounts.",
+      "paths": {
+        "with_docker": "with-docker/18-dotnet-razor-helpdesk",
+        "no_docker": "no-docker/18-dotnet-razor-helpdesk"
+      }
     },
     {
       "name": "vue-spa-kanban",
@@ -1855,7 +1927,11 @@
         ]
       },
       "persistence": "browser localStorage only: flowboard.auth (session) and flowboard.board (columns + cards, seeded from src/mocks/board.ts on first visit)",
-      "notes": "HTML5 history mode: the host MUST rewrite unknown paths to /index.html with status 200 (nginx: try_files $uri $uri/ /index.html — see nginx.conf; Netlify: public/_redirects; Vercel: vercel.json). Every route including /board/c-3 must return index.html; the SPA renders its own 404 view. Port 5019 is only the Vite dev server (npm run dev), not needed in production. `npm run build` runs vue-tsc type-checking first; use `npm run build-only` to skip it."
+      "notes": "HTML5 history mode: the host MUST rewrite unknown paths to /index.html with status 200 (nginx: try_files $uri $uri/ /index.html — see nginx.conf; Netlify: public/_redirects; Vercel: vercel.json). Every route including /board/c-3 must return index.html; the SPA renders its own 404 view. Port 5019 is only the Vite dev server (npm run dev), not needed in production. `npm run build` runs vue-tsc type-checking first; use `npm run build-only` to skip it.",
+      "paths": {
+        "with_docker": "with-docker/19-vue-spa-kanban",
+        "no_docker": "no-docker/19-vue-spa-kanban"
+      }
     },
     {
       "name": "bun-elysia-htmx-polls",
@@ -1956,7 +2032,11 @@
         ]
       },
       "persistence": "sqlite file via bun:sqlite at DB_PATH (image: /app/data/pulsebox.sqlite on the /app/data volume); schema created and 3 demo polls seeded automatically when the polls table is empty",
-      "notes": "Runs as the non-root `bun` user (uid 1000): a bind-mounted data directory must be writable by that uid (named volumes are fine). There is no email delivery - to log in, read the OTP from `docker logs` or call /dev/last-code (non-production only). Set APP_ENV=production and a real SESSION_SECRET for anything public. HTMX is loaded from unpkg CDN; no build step."
+      "notes": "Runs as the non-root `bun` user (uid 1000): a bind-mounted data directory must be writable by that uid (named volumes are fine). There is no email delivery - to log in, read the OTP from `docker logs` or call /dev/last-code (non-production only). Set APP_ENV=production and a real SESSION_SECRET for anything public. HTMX is loaded from unpkg CDN; no build step.",
+      "paths": {
+        "with_docker": "with-docker/20-bun-elysia-htmx-polls",
+        "no_docker": "no-docker/20-bun-elysia-htmx-polls"
+      }
     },
     {
       "name": "react-dotnet-kitchen-display",
@@ -2108,7 +2188,11 @@
         ]
       },
       "persistence": "SQLite file at api/data/kds.db locally (WAL mode, -shm/-wal side files) or /app/data/kds.db on the /app/data volume in Docker; schema comes from the committed EF Core migration (Database.Migrate() at startup) and an idempotent seeder adds 2 users, 12 menu items and 6 orders when the tables are empty. Refresh tokens are rows in the same database.",
-      "notes": "Single container / single port: the API serves the React build from wwwroot (SPA fallback for every path except /api/* and /hubs/*, which return JSON 404s). Real-time updates use SignalR over WebSockets, so any reverse proxy MUST forward Upgrade/Connection headers for /hubs/ (nginx: proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection \"upgrade\"); without it the client falls back to long polling. Behind HTTPS set COOKIE_SECURE=true, and behind a proxy set TRUST_PROXY_HEADERS=true so the 10/min order limit is per real client IP instead of per proxy. The container runs as the non-root 'app' user (uid 1654) and needs a writable /app/data (a named volume works out of the box; a bind mount must be writable by uid 1654). The start command runs the published DLL from api/ so the database lands in api/data; the web root is resolved automatically (cwd/wwwroot, then <dll dir>/wwwroot, then ../web/dist). Requires the .NET 10 SDK to build and Node >= 20.19 for the web build; port 5021 is only the Vite dev server and is not exposed in production. JWT_SECRET default is a demo value – override it."
+      "notes": "Single container / single port: the API serves the React build from wwwroot (SPA fallback for every path except /api/* and /hubs/*, which return JSON 404s). Real-time updates use SignalR over WebSockets, so any reverse proxy MUST forward Upgrade/Connection headers for /hubs/ (nginx: proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection \"upgrade\"); without it the client falls back to long polling. Behind HTTPS set COOKIE_SECURE=true, and behind a proxy set TRUST_PROXY_HEADERS=true so the 10/min order limit is per real client IP instead of per proxy. The container runs as the non-root 'app' user (uid 1654) and needs a writable /app/data (a named volume works out of the box; a bind mount must be writable by uid 1654). The start command runs the published DLL from api/ so the database lands in api/data; the web root is resolved automatically (cwd/wwwroot, then <dll dir>/wwwroot, then ../web/dist). Requires the .NET 10 SDK to build and Node >= 20.19 for the web build; port 5021 is only the Vite dev server and is not exposed in production. JWT_SECRET default is a demo value – override it.",
+      "paths": {
+        "with_docker": "with-docker/21-react-dotnet-kitchen-display",
+        "no_docker": "no-docker/21-react-dotnet-kitchen-display"
+      }
     }
   ]
 }

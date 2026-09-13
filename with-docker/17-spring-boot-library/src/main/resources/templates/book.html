@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+      th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head><title th:text="${book.title} + ' · Kütüphane Plus'">Kitap · Kütüphane Plus</title></head>
+<body>
+<main class="container py-4 flex-grow-1">
+  <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a th:href="@{/}">Katalog</a></li><li class="breadcrumb-item active" th:text="${book.title}">Kitap</li></ol></nav>
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card p-4">
+        <span class="badge bg-light text-dark border align-self-start mb-2" th:text="${book.genre}">Roman</span>
+        <h1 class="h2" th:text="${book.title}">Başlık</h1>
+        <p class="lead text-muted mb-3" th:text="${book.author}">Yazar</p>
+        <dl class="row mb-0">
+          <dt class="col-sm-3">ISBN</dt><dd class="col-sm-9"><code th:text="${book.isbn}">978</code></dd>
+          <dt class="col-sm-3">Yayın yılı</dt><dd class="col-sm-9" th:text="${book.publishedYear} ?: '–'">1972</dd>
+          <dt class="col-sm-3">Kopya</dt><dd class="col-sm-9"><span th:text="${book.copiesAvailable}">1</span> müsait / <span th:text="${book.copiesTotal}">3</span> toplam</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card p-4">
+        <h2 class="h5">Ödünç al</h2>
+        <p class="small text-muted">Süre 14 gün, aynı anda en fazla 3 kitap.</p>
+        <div sec:authorize="isAuthenticated()">
+          <div class="alert alert-info py-2 small" th:if="${alreadyBorrowed}">Bu kitap şu anda sizde. <a th:href="@{/my/loans}">Ödünçlerim</a></div>
+          <form th:action="@{/books/{id}/borrow(id=${book.id})}" method="post" th:unless="${alreadyBorrowed}">
+            <button class="btn btn-primary w-100" type="submit" th:disabled="${!book.available}"
+                    th:text="${book.available} ? 'Ödünç al' : 'Tüm kopyalar ödünçte'">Ödünç al</button>
+          </form>
+        </div>
+        <div sec:authorize="!isAuthenticated()">
+          <a class="btn btn-primary w-100" th:href="@{/login}">Ödünç almak için giriş yapın</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

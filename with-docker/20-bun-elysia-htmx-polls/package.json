@@ -1,0 +1,22 @@
+{
+  "name": "pulsebox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pulsebox - live polls with Bun, Elysia, JSX templates and HTMX",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.tsx",
+    "start": "bun src/index.tsx"
+  },
+  "dependencies": {
+    "@elysiajs/html": "1.4.2",
+    "@kitajs/html": "4.2.13",
+    "elysia": "1.4.30"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.2"
+  },
+  "engines": {
+    "bun": ">=1.2"
+  }
+}

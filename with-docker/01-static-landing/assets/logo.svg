@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="Nordwind Coffee Roasters logo">
+  <circle cx="24" cy="24" r="22" fill="#2b1d16"/>
+  <path d="M24 9c-6 6-7 13-3 20 3-6 8-9 12-10-2 6-6 11-9 15 6-2 12-8 12-16 0-5-5-9-12-9z" fill="#e0b070"/>
+  <path d="M14 36c4-3 8-4 12-3" stroke="#e0b070" stroke-width="2" stroke-linecap="round" fill="none"/>
+</svg>

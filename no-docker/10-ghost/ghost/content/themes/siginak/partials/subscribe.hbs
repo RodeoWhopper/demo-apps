@@ -1,0 +1,11 @@
+{{#if @site.members_enabled}}
+<form class="subscribe" data-members-form="subscribe">
+    <label class="screen-reader-text" for="subscribe-email">E-posta</label>
+    <div class="subscribe__row">
+        <input id="subscribe-email" data-members-email type="email" required autocomplete="email" placeholder="e-posta adresiniz">
+        <button class="button" type="submit">Abone ol</button>
+    </div>
+    <p class="subscribe__msg subscribe__msg--success" data-members-success>Teşekkürler! Onay bağlantısı için gelen kutunuzu kontrol edin.</p>
+    <p class="subscribe__msg subscribe__msg--error" data-members-error>Bir şeyler ters gitti, lütfen tekrar deneyin.</p>
+</form>
+{{/if}}

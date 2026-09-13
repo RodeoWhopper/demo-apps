@@ -1,0 +1,13 @@
+node_modules/
+.env
+*.log
+.DS_Store
+# Strapi build + runtime artefacts
+cms/dist/
+cms/build/
+cms/.cache/
+cms/.tmp/
+cms/.strapi/
+cms/.strapi-updater.json
+cms/public/uploads/*
+!cms/public/uploads/.gitkeep

@@ -1,0 +1,9 @@
+{
+  "name": "Nordwind Coffee Roasters",
+  "short_name": "Nordwind",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbf6ee",
+  "theme_color": "#2b1d16",
+  "icons": [{ "src": "/assets/logo.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

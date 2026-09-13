@@ -1,0 +1,23 @@
+{% extends "blog/base.html" %}
+{% block title %}{% if object %}Edit: {{ object.title }}{% else %}Write{% endif %}{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">{% if object %}Editing{% else %}New essay{% endif %}</p>
+  <h1>{% if object %}{{ object.title }}{% else %}Write something worth reading{% endif %}</h1>
+</section>
+<form method="post" class="form editor">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  <p class="field">{{ form.title.label_tag }} {{ form.title }} {{ form.title.errors }}</p>
+  <div class="row">
+    <p class="field">{{ form.category.label_tag }} {{ form.category }} {{ form.category.errors }}</p>
+    <p class="field">{{ form.status.label_tag }} {{ form.status }} {{ form.status.errors }}</p>
+  </div>
+  <p class="field">{{ form.excerpt.label_tag }} {{ form.excerpt }} {{ form.excerpt.errors }}</p>
+  <p class="field">{{ form.body.label_tag }} {{ form.body }} <span class="help">{{ form.body.help_text }}</span> {{ form.body.errors }}</p>
+  <p class="actions">
+    <button type="submit" class="btn">Save</button>
+    <a class="btn btn-ghost" href="{% url 'dashboard' %}">Cancel</a>
+  </p>
+</form>
+{% endblock %}

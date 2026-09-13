@@ -1,0 +1,19 @@
+{{!< default}}
+
+{{#post}}
+<article class="post page {{post_class}}">
+    {{#if @page.show_title_and_feature_image}}
+    <header class="post__header container narrow">
+        <h1 class="post__title">{{title}}</h1>
+    </header>
+    {{#if feature_image}}
+    <figure class="post__feature-image container">
+        <img src="{{img_url feature_image size="l"}}" alt="{{title}}">
+    </figure>
+    {{/if}}
+    {{/if}}
+    <section class="gh-content post__content container narrow">
+        {{content}}
+    </section>
+</article>
+{{/post}}

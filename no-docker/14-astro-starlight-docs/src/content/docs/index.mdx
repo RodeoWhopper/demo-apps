@@ -1,0 +1,55 @@
+---
+title: Kestrel CLI
+description: One binary to create, sync and tear down preview environments from any branch.
+template: splash
+hero:
+  tagline: One binary to create, sync and tear down preview environments from any branch — in seconds, not sprints.
+  image:
+    file: ../../assets/logo.svg
+  actions:
+    - text: Get started
+      link: /getting-started/
+      icon: right-arrow
+    - text: CLI reference
+      link: /reference/cli/
+      icon: document
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Why teams pick Kestrel
+
+<CardGrid stagger>
+  <Card title="Preview any branch" icon="rocket">
+    `kestrel up` builds your branch and gives you a URL. Push again and the environment syncs in place.
+  </Card>
+  <Card title="Zero config to start" icon="setting">
+    Kestrel detects Containerfiles, Compose files and framework presets. A `kestrel.toml` is optional until you need it.
+  </Card>
+  <Card title="CI native" icon="approve-check">
+    A single GitHub Action or GitLab job. Comments the preview URL on the pull request and cleans up on merge.
+  </Card>
+  <Card title="Secrets done right" icon="seti:lock">
+    Secrets are pulled at deploy time from your existing vault. Nothing is written to disk in plain text.
+  </Card>
+</CardGrid>
+
+## Sixty-second tour
+
+```bash
+curl -fsSL https://kestrel.example/install.sh | sh
+kestrel login
+kestrel up          # builds, deploys, prints https://<branch>.preview.example
+kestrel logs -f     # tail the environment
+kestrel down        # tear it down (or let it expire)
+```
+
+<CardGrid>
+  <Card title="Read the guides" icon="open-book">
+    Step-by-step walkthroughs for [preview environments](/guides/preview-environments/), [CI integration](/guides/ci-integration/) and [secrets](/guides/secrets-management/).
+  </Card>
+  <Card title="Browse the reference" icon="list-format">
+    Every command, flag and exit code is documented in the [CLI reference](/reference/cli/).
+  </Card>
+</CardGrid>

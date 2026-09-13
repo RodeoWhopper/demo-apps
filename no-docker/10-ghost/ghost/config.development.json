@@ -1,0 +1,22 @@
+{
+  "url": "http://localhost:8010",
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8010
+  },
+  "database": {
+    "client": "sqlite3",
+    "connection": {
+      "filename": "content/data/ghost-dev.db"
+    }
+  },
+  "mail": {
+    "transport": "Direct"
+  },
+  "logging": {
+    "transports": ["file", "stdout"]
+  },
+  "security": {
+    "staffDeviceVerification": false
+  }
+}

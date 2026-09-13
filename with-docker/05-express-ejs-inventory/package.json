@@ -1,0 +1,22 @@
+{
+  "name": "depot-ninety-inventory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Depot Ninety - Express 4 + EJS warehouse inventory demo with server-side sessions and lowdb",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "3.0.3",
+    "ejs": "6.0.1",
+    "express": "4.22.2",
+    "express-session": "1.19.0",
+    "lowdb": "7.0.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

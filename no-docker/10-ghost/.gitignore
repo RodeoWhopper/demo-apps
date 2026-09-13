@@ -1,0 +1,12 @@
+.DS_Store
+*.log
+ghost/node_modules/
+ghost/content/data/*.db*
+ghost/content/logs/*
+!ghost/content/logs/README.md
+ghost/content/images/*
+!ghost/content/images/README.md
+ghost/content/files/
+ghost/content/media/
+ghost/content/public/*
+!ghost/content/public/README.md

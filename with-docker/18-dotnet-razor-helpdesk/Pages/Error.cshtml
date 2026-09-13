@@ -1,0 +1,10 @@
+@page
+@model ErrorModel
+@{
+    ViewData["Title"] = $"Hata {Model.Code}";
+}
+<div class="text-center py-5">
+    <p class="display-1 fw-bold text-secondary">@Model.Code</p>
+    <h1 class="h3">@(Model.Code == 404 ? "Sayfa bulunamadı" : "Bir şeyler ters gitti")</h1>
+    <a class="btn btn-primary mt-2" asp-page="/Index">Ana sayfa</a>
+</div>
