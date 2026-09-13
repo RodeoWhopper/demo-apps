@@ -1,0 +1,86 @@
+@{
+    var signedIn = SignInManager.IsSignedIn(User);
+    var isStaff = User.IsInRole("Admin") || User.IsInRole("Agent");
+    var current = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+    string Active(string prefix) => current.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"] is string t ? $"{t} · Masaüstü Destek" : "Masaüstü Destek")</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="d-flex flex-column min-vh-100">
+<nav class="navbar navbar-expand-lg navbar-md navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" asp-page="/Index"><span class="dot"></span>Masaüstü Destek</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-label="Menü"><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="nav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link @Active("/Index")" asp-page="/Index">Ana sayfa</a></li>
+                @if (signedIn)
+                {
+                    <li class="nav-item"><a class="nav-link @Active("/Tickets/Index")" asp-page="/Tickets/Index">Biletler</a></li>
+                    <li class="nav-item"><a class="nav-link @Active("/Tickets/Create")" asp-page="/Tickets/Create">Yeni bilet</a></li>
+                }
+                @if (User.IsInRole("Admin"))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle @Active("/Admin")" href="#" role="button" data-bs-toggle="dropdown">Yönetim</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" asp-page="/Admin/Users">Kullanıcılar & roller</a></li>
+                            <li><a class="dropdown-item" asp-page="/Admin/Categories">Kategoriler</a></li>
+                        </ul>
+                    </li>
+                }
+            </ul>
+            <div class="d-flex align-items-center gap-2">
+                @if (signedIn)
+                {
+                    var me = await UserManager.GetUserAsync(User);
+                    <span class="text-light small">
+                        @(me?.DisplayName ?? User.Identity?.Name)
+                        @if (User.IsInRole("Admin")) { <span class="badge text-bg-warning ms-1">Admin</span> }
+                        else if (User.IsInRole("Agent")) { <span class="badge text-bg-info ms-1">Agent</span> }
+                        else { <span class="badge text-bg-secondary ms-1">Requester</span> }
+                    </span>
+                    <form method="post" asp-page="/Account/Logout" class="m-0">
+                        <button type="submit" class="btn btn-sm btn-outline-light">Çıkış</button>
+                    </form>
+                }
+                else
+                {
+                    <a class="btn btn-sm btn-outline-light" asp-page="/Account/Register">Kayıt ol</a>
+                    <a class="btn btn-sm btn-primary" asp-page="/Account/Login">Giriş yap</a>
+                }
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="container py-4 flex-grow-1">
+    @if (TempData["Message"] is string message)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">@message<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @if (TempData["Error"] is string error)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">@error<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @RenderBody()
+</main>
+
+<footer class="border-top py-3 mt-auto">
+    <div class="container d-flex flex-wrap justify-content-between">
+        <span>© 2026 Masaüstü Destek · ASP.NET Core Razor Pages + Identity demo</span>
+        <span>Sağlık: <code>/healthz</code></span>
+    </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

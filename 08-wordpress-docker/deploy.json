@@ -1,0 +1,41 @@
+{
+  "name": "wordpress-docker",
+  "folder": "08-wordpress-docker",
+  "title": "Çınar Mimarlık — WordPress studio site",
+  "description": "Stock WordPress 6 (official images) with a bind-mounted custom theme and mu-plugin providing a 'project' custom post type; provisioned idempotently by setup.sh via a wp-cli sidecar.",
+  "kind": "cms",
+  "stack": ["docker", "wordpress", "php", "mariadb", "wp-cli"],
+  "runtime": "docker",
+  "port": 8008,
+  "extra_ports": [],
+  "install": null,
+  "build": null,
+  "start": "docker compose up -d && ./setup.sh",
+  "dev": null,
+  "docker": { "compose": "docker-compose.yml" },
+  "healthcheck": { "path": "/wp-json/cinar/v1/health", "expect_status": 200 },
+  "env": [
+    { "name": "WORDPRESS_DB_NAME", "required": false, "default": "cinar", "description": "MariaDB database name" },
+    { "name": "WORDPRESS_DB_USER", "required": false, "default": "cinar", "description": "MariaDB user" },
+    { "name": "WORDPRESS_DB_PASSWORD", "required": false, "default": "change-me-demo-db-pass", "description": "MariaDB password (demo value)" },
+    { "name": "MARIADB_ROOT_PASSWORD", "required": false, "default": "change-me-demo-root-pass", "description": "MariaDB root password (demo value)" },
+    { "name": "WORDPRESS_TABLE_PREFIX", "required": false, "default": "wp_", "description": "Table prefix" },
+    { "name": "WP_HOME", "required": false, "default": "http://localhost:8008", "description": "Public site URL; change to the deployed domain" },
+    { "name": "WP_SITEURL", "required": false, "default": "http://localhost:8008", "description": "WordPress core URL; same as WP_HOME" },
+    { "name": "WORDPRESS_CONFIG_EXTRA", "required": false, "default": "define('WP_HOME', getenv('WP_HOME') ?: 'http://localhost:8008'); define('WP_SITEURL', getenv('WP_SITEURL') ?: 'http://localhost:8008');", "description": "PHP appended to wp-config.php; keep the default" },
+    { "name": "WP_ADMIN_USER", "required": false, "default": "admin", "description": "Admin user created by setup.sh on first install" },
+    { "name": "WP_ADMIN_PASSWORD", "required": false, "default": "Admin123!", "description": "Admin password created by setup.sh on first install" },
+    { "name": "WP_ADMIN_EMAIL", "required": false, "default": "admin@cinar.local", "description": "Admin e-mail created by setup.sh on first install" }
+  ],
+  "auth": { "model": "cms-admin", "description": "WordPress native login (/wp-login.php) with auth cookies; /wp-admin/ redirects anonymous users to the login form. Public site and REST read endpoints need no auth." },
+  "credentials": [
+    { "role": "admin", "username": "admin", "password": "Admin123!" }
+  ],
+  "routes": {
+    "public": ["/", "/projeler/", "/projeler/kordon-konutlari/", "/proje-turu/konut/", "/hakkimizda/", "/iletisim/", "/wp-json/cinar/v1/health", "/wp-json/wp/v2/project", "/wp-login.php"],
+    "authenticated": [],
+    "admin": ["/wp-admin/"]
+  },
+  "persistence": "Named volumes: db_data (MariaDB), wp_core (/var/www/html incl. wp-config.php), wp_content (uploads/plugins). Theme and mu-plugin are bind-mounted from the repo. Content is created by setup.sh into the database.",
+  "notes": "Docker-only. After `docker compose up -d` you MUST run ./setup.sh once (idempotent, ~1-2 min) – it waits for MariaDB, runs `wp core install`, activates the theme and seeds pages/projects/menu via the wpcli sidecar (compose profile 'cli', never started by `up`). Until then the health route redirects to the install wizard. To serve from another domain set WP_HOME and WP_SITEURL in .env before running setup.sh (or afterwards – constants override DB values). Only port 8008 is published; MariaDB is internal. XML-RPC is disabled. The wpcli service runs as uid 33 to match the Apache image."
+}

@@ -1,0 +1,40 @@
+{
+  "name": "ghost-docker",
+  "folder": "10-ghost-docker",
+  "title": "Sığınak — Ghost 5 newsletter",
+  "description": "Stock Ghost 5 + MySQL 8 on Docker with a bind-mounted custom Handlebars theme and routes.yaml (/newsletter/ channel, /archive/); owner account, theme activation and sample content are provisioned through the Admin API by an idempotent script.",
+  "kind": "cms",
+  "stack": ["docker", "ghost", "node", "handlebars", "mysql"],
+  "runtime": "docker",
+  "port": 8010,
+  "extra_ports": [],
+  "install": null,
+  "build": null,
+  "start": "docker compose up -d && scripts/setup-owner.sh",
+  "dev": null,
+  "docker": { "compose": "docker-compose.yml" },
+  "healthcheck": { "path": "/ghost/api/admin/site/", "expect_status": 200 },
+  "env": [
+    { "name": "GHOST_URL", "required": false, "default": "http://localhost:8010", "description": "Public URL of the site; change to the deployed domain" },
+    { "name": "MYSQL_ROOT_PASSWORD", "required": false, "default": "change-me-demo-root", "description": "MySQL root password (demo)" },
+    { "name": "MYSQL_DATABASE", "required": false, "default": "ghost", "description": "Database name" },
+    { "name": "MYSQL_USER", "required": false, "default": "ghost", "description": "Database user" },
+    { "name": "MYSQL_PASSWORD", "required": false, "default": "change-me-demo-ghost", "description": "Database password (demo)" },
+    { "name": "MAIL_TRANSPORT", "required": false, "default": "Direct", "description": "Ghost mail transport; SMTP + mail__options__* for real mail" },
+    { "name": "STAFF_DEVICE_VERIFICATION", "required": false, "default": "false", "description": "Keep false without SMTP or admin logins fail (Ghost e-mails a device code)" },
+    { "name": "GHOST_OWNER_NAME", "required": false, "default": "Sığınak Editörü", "description": "Owner name created by setup-owner.sh" },
+    { "name": "GHOST_OWNER_EMAIL", "required": false, "default": "owner@siginak.dev", "description": "Owner login e-mail created by setup-owner.sh" },
+    { "name": "GHOST_OWNER_PASSWORD", "required": false, "default": "Owner123!!", "description": "Owner password (min 10 chars) created by setup-owner.sh" }
+  ],
+  "auth": { "model": "cms-admin", "description": "Ghost admin session: POST /ghost/api/admin/session/ (JSON username/password + Origin header) sets a cookie used by /ghost/ and the Admin API; Admin API returns 403 without it. Public site, RSS and /ghost/api/admin/site/ are anonymous." },
+  "credentials": [
+    { "role": "admin", "username": "owner@siginak.dev", "password": "Owner123!!" }
+  ],
+  "routes": {
+    "public": ["/", "/newsletter/", "/archive/", "/hakkinda/", "/sayi-1-yavaslamanin-haritasi/", "/tag/newsletter/", "/author/siginak/", "/rss/", "/ghost/api/admin/site/"],
+    "authenticated": ["/ghost/api/admin/posts/"],
+    "admin": ["/ghost/"]
+  },
+  "persistence": "Named volumes db_data (MySQL) and ghost_content (/var/lib/ghost/content: images, files, logs). Theme (content/themes/siginak) and content/settings/routes.yaml are bind-mounted from the repo. Owner, settings, page and posts are created by scripts/setup-owner.sh when missing.",
+  "notes": "Docker-only. After `docker compose up -d`, wait for GET /ghost/api/admin/site/ = 200 (Ghost needs ~20 s to create its MySQL schema on first boot) and run scripts/setup-owner.sh once (idempotent; needs curl + python3 on the host). Without it the site is up but /ghost/ shows Ghost's setup wizard and the default Casper theme is active. Only port 8010 is published; MySQL is internal. No SMTP is configured, so member e-mails/newsletters are not sent; STAFF_DEVICE_VERIFICATION must stay false unless SMTP is configured. GHOST_URL must equal the externally visible URL or Ghost will generate wrong links/redirects."
+}

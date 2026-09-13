@@ -1,0 +1,21 @@
+{{!< default}}
+
+{{#unless pagination.prev}}
+<section class="hero">
+    <div class="container narrow">
+        <p class="eyebrow">Haftalık bülten</p>
+        <h1 class="hero__title">{{@site.title}}</h1>
+        {{#if @site.description}}<p class="hero__lead">{{@site.description}}</p>{{/if}}
+        {{> "subscribe"}}
+    </div>
+</section>
+{{/unless}}
+
+<section class="container">
+    <div class="post-feed">
+        {{#foreach posts}}
+            {{> "post-card"}}
+        {{/foreach}}
+    </div>
+    {{pagination}}
+</section>

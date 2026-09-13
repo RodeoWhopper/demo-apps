@@ -1,0 +1,22 @@
+{
+  "name": "astro-starlight-docs",
+  "private": true,
+  "type": "module",
+  "version": "1.4.0",
+  "scripts": {
+    "dev": "astro dev --port 4314",
+    "build": "astro build",
+    "preview": "astro preview --port 4314 --host",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.37.7",
+    "astro": "5.18.2"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": ">=18.20.8"
+  }
+}

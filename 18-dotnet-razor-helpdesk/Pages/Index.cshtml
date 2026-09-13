@@ -1,0 +1,53 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Ana sayfa";
+}
+<section class="hero p-4 p-md-5 mb-4">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <h1 class="display-6 fw-bold mb-2">BT destek talepleriniz tek yerde.</h1>
+            <p class="mb-3 opacity-75">Donanım, yazılım, ağ ve hesap sorunları için bilet açın; destek ekibi durumu güncellesin, siz yorumlardan takip edin.</p>
+            @if (SignInManager.IsSignedIn(User))
+            {
+                <a class="btn btn-light btn-lg me-2" asp-page="/Tickets/Create">Yeni bilet aç</a>
+                <a class="btn btn-outline-light btn-lg" asp-page="/Tickets/Index">Biletleri gör</a>
+            }
+            else
+            {
+                <a class="btn btn-light btn-lg me-2" asp-page="/Account/Login">Giriş yap</a>
+                <a class="btn btn-outline-light btn-lg" asp-page="/Account/Register">Hesap oluştur</a>
+            }
+        </div>
+        <div class="col-lg-5">
+            <div class="row g-3">
+                <div class="col-6"><div class="stat-tile"><div class="num">@Model.OpenCount</div><div class="small text-muted">açık bilet</div></div></div>
+                <div class="col-6"><div class="stat-tile"><div class="num">@Model.InProgressCount</div><div class="small text-muted">işlemde</div></div></div>
+                <div class="col-12"><div class="stat-tile"><div class="num">@Model.ResolvedThisWeek</div><div class="small text-muted">son 7 günde çözülen / kapatılan</div></div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<h2 class="h4 mb-3">Kategoriler</h2>
+<div class="row g-3">
+    @foreach (var (category, count) in Model.Categories)
+    {
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h3 class="h6 mb-1">@category.Name</h3>
+                    <span class="badge text-bg-light border">@count aktif</span>
+                </div>
+                <p class="small text-muted mb-0">@category.Description</p>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="card mt-4 p-3 small text-muted">
+    <strong class="text-dark">Demo hesaplar</strong>
+    <span><code>admin@masaustu.dev</code> / <code>Admin123!</code> (Admin) ·
+    <code>agent@masaustu.dev</code> / <code>Agent123!</code> (Agent) ·
+    <code>user@masaustu.dev</code> / <code>User123!</code> (Requester)</span>
+</div>

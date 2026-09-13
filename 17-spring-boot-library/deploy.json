@@ -1,0 +1,35 @@
+{
+  "name": "spring-boot-library",
+  "folder": "17-spring-boot-library",
+  "title": "Kütüphane Plus – Library Lending System",
+  "description": "A Spring Boot 3 library lending system with a public catalogue, member borrowing/returns and a librarian admin area, using Spring Security form login with server-side sessions and CSRF, Thymeleaf views and a file-based H2 database.",
+  "kind": "ssr",
+  "stack": ["java", "spring-boot", "spring-security", "thymeleaf", "spring-data-jpa", "h2", "maven"],
+  "runtime": "java@21",
+  "port": 8017,
+  "extra_ports": [],
+  "install": "./mvnw -B -q dependency:go-offline",
+  "build": "./mvnw -B -q package -DskipTests",
+  "start": "java -jar target/library.jar",
+  "dev": "./mvnw spring-boot:run",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/actuator/health", "expect_status": 200 },
+  "env": [
+    { "name": "PORT", "required": false, "default": "8017", "description": "HTTP port (server.port)" },
+    { "name": "DB_PATH", "required": false, "default": "./data/library", "description": "H2 database file prefix without extension; H2 creates <DB_PATH>.mv.db (Docker image sets /app/data/library)" },
+    { "name": "SPRING_PROFILES_ACTIVE", "required": false, "default": "(none)", "description": "Set to 'prod' to hide stack traces/messages in error pages (Docker image sets prod). H2 console is disabled in every profile." },
+    { "name": "JAVA_OPTS", "required": false, "default": "-XX:MaxRAMPercentage=75", "description": "Extra JVM flags (Docker entrypoint only)" }
+  ],
+  "auth": { "model": "server-session", "description": "Spring Security form login (POST /login with username/password/_csrf) backed by a BCrypt UserDetailsService over the members table; JSESSIONID cookie session, CSRF token required on every POST, roles ROLE_ADMIN and ROLE_MEMBER enforced by requestMatchers (/admin/** hasRole ADMIN, /my/** and /loans/** authenticated). 403 renders a custom page." },
+  "credentials": [
+    { "role": "admin", "username": "librarian@kutuphane.dev", "password": "Admin123!" },
+    { "role": "member", "username": "uye@kutuphane.dev", "password": "Uye123!" }
+  ],
+  "routes": {
+    "public": ["/", "/books/{id}", "/login", "/actuator/health", "/css/**"],
+    "authenticated": ["/my/loans", "/books/{id}/borrow", "/loans/{id}/return", "/logout"],
+    "admin": ["/admin/books", "/admin/books/new", "/admin/books/{id}/edit", "/admin/loans", "/admin/members"]
+  },
+  "persistence": "H2 file database at ./data/library.mv.db (DB_PATH; /app/data inside the container) – schema managed by Hibernate ddl-auto=update, seeded with 10 books, 2 users and 3 loans when the members table is empty",
+  "notes": "Java/Maven are not required on the host when using Docker (multi-stage build compiles inside maven:3.9-eclipse-temurin-21). Without Docker, JDK 21 is required and ./mvnw downloads Maven 3.9.16 on first use (needs network). First Maven build downloads ~120 MB of dependencies. Container runs as non-root user 'app'; mount a writable volume at /app/data. Startup takes ~8-20 s before /actuator/health returns 200, so give the healthcheck a start period."
+}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head><title>Giriş · Kütüphane Plus</title></head>
+<body>
+<main class="container py-4 flex-grow-1">
+  <div class="card login-card p-4">
+    <h1 class="h3 mb-1">Giriş yap</h1>
+    <p class="text-muted small mb-3">Oturum sunucu tarafında tutulur (JSESSIONID); form CSRF ile korunur.</p>
+    <div class="alert alert-danger py-2" th:if="${param.error}">E-posta veya şifre hatalı.</div>
+    <div class="alert alert-success py-2" th:if="${param.logout}">Çıkış yapıldı.</div>
+    <form th:action="@{/login}" method="post">
+      <div class="mb-3">
+        <label class="form-label" for="username">E-posta</label>
+        <input class="form-control" type="email" id="username" name="username" required autofocus autocomplete="username">
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="password">Şifre</label>
+        <input class="form-control" type="password" id="password" name="password" required autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary w-100" type="submit">Giriş</button>
+    </form>
+    <hr>
+    <p class="small text-muted mb-1">Demo hesaplar:</p>
+    <ul class="small mb-0">
+      <li><code>librarian@kutuphane.dev</code> / <code>Admin123!</code> – kütüphaneci (ROLE_ADMIN)</li>
+      <li><code>uye@kutuphane.dev</code> / <code>Uye123!</code> – üye (ROLE_MEMBER)</li>
+    </ul>
+  </div>
+</main>
+</body>
+</html>

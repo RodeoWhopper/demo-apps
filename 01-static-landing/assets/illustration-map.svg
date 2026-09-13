@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200" role="img" aria-label="Stylised map of the coffee belt">
+  <rect width="320" height="200" rx="16" fill="#f4e7d3"/>
+  <path d="M20 100h280" stroke="#b8865a" stroke-width="2" stroke-dasharray="6 6"/>
+  <path d="M40 60c30-20 60 10 90-10s50 30 90 10 50 10 70 0" fill="none" stroke="#2b1d16" stroke-width="3" opacity=".5"/>
+  <path d="M30 140c30 20 60-10 90 10s50-30 90-10 50-10 80 0" fill="none" stroke="#2b1d16" stroke-width="3" opacity=".5"/>
+  <g fill="#c8553d" stroke="#2b1d16" stroke-width="2">
+    <circle cx="80" cy="118" r="8"/><circle cx="150" cy="95" r="8"/><circle cx="215" cy="112" r="8"/><circle cx="270" cy="92" r="8"/>
+  </g>
+  <g font-family="Georgia, serif" font-size="12" fill="#2b1d16">
+    <text x="60" y="142">Huila</text><text x="128" y="82">Sidamo</text><text x="196" y="136">Ratnagiri</text><text x="250" y="80">Java</text>
+  </g>
+</svg>

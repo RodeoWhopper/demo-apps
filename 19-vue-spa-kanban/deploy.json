@@ -1,0 +1,33 @@
+{
+  "name": "vue-spa-kanban",
+  "folder": "19-vue-spa-kanban",
+  "title": "Flowboard — Vue 3 kanban SPA",
+  "description": "Client-only kanban board (Vue 3 + Vite 6 + Vue Router 4 history mode + Pinia + Tailwind 4) with mock login and role-guarded routes. Board and session live in localStorage; there is no backend at all.",
+  "kind": "spa",
+  "stack": ["node", "vue", "vite", "vue-router", "pinia", "tailwindcss", "typescript", "nginx"],
+  "runtime": "node@22",
+  "port": 8019,
+  "extra_ports": [5019],
+  "install": "npm ci",
+  "build": "npm run build",
+  "start": "npm run preview",
+  "dev": "npm run dev",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/", "expect_status": 200 },
+  "env": [],
+  "auth": {
+    "model": "client-mock",
+    "description": "Client-side only. Login compares against hard-coded users in src/mocks/users.ts and stores a fake token + user in localStorage['flowboard.auth']. Vue Router beforeEach guards enforce requiresAuth (/board, /settings) and requiresAdmin (/admin) with redirect to /login?redirect=<path>. Nothing is enforced server-side."
+  },
+  "credentials": [
+    { "role": "admin", "username": "ana@flowboard.app", "password": "Ana123!" },
+    { "role": "member", "username": "leo@flowboard.app", "password": "Leo123!" }
+  ],
+  "routes": {
+    "public": ["/", "/login", "/api-mock", "/:pathMatch(.*)* (client-side 404)"],
+    "authenticated": ["/board", "/board/:cardId", "/settings"],
+    "admin": ["/admin"]
+  },
+  "persistence": "browser localStorage only: flowboard.auth (session) and flowboard.board (columns + cards, seeded from src/mocks/board.ts on first visit)",
+  "notes": "HTML5 history mode: the host MUST rewrite unknown paths to /index.html with status 200 (nginx: try_files $uri $uri/ /index.html — see nginx.conf; Netlify: public/_redirects; Vercel: vercel.json). Every route including /board/c-3 must return index.html; the SPA renders its own 404 view. Port 5019 is only the Vite dev server (npm run dev), not needed in production. `npm run build` runs vue-tsc type-checking first; use `npm run build-only` to skip it."
+}

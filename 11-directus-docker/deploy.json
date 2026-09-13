@@ -1,0 +1,39 @@
+{
+  "name": "directus-docker",
+  "folder": "11-directus-docker",
+  "title": "Kılavuz Etkinlik — Directus 11 events directory",
+  "description": "Directus 11 + Postgres 16 with an events/categories data model built via the REST API by an idempotent bootstrap script and versioned as a schema snapshot; public-policy read access for published events; static nginx frontend with city filter.",
+  "kind": "cms",
+  "stack": ["docker", "directus", "node", "postgres", "nginx"],
+  "runtime": "docker",
+  "port": 8011,
+  "extra_ports": [8111],
+  "install": null,
+  "build": null,
+  "start": "docker compose up -d && scripts/bootstrap.sh",
+  "dev": null,
+  "docker": { "compose": "docker-compose.yml" },
+  "healthcheck": { "path": "/server/health", "expect_status": 200 },
+  "env": [
+    { "name": "DIRECTUS_KEY", "required": false, "default": "change-me-demo-key", "description": "Directus KEY" },
+    { "name": "DIRECTUS_SECRET", "required": false, "default": "change-me-demo-secret-please-rotate-me", "description": "Directus SECRET (token signing) – rotate for real use" },
+    { "name": "ADMIN_EMAIL", "required": false, "default": "admin@kilavuz.dev", "description": "First admin user, created by Directus on first boot" },
+    { "name": "ADMIN_PASSWORD", "required": false, "default": "Admin123!", "description": "First admin password (first boot only)" },
+    { "name": "POSTGRES_USER", "required": false, "default": "directus", "description": "Database user" },
+    { "name": "POSTGRES_PASSWORD", "required": false, "default": "change-me-demo-db", "description": "Database password (demo)" },
+    { "name": "POSTGRES_DB", "required": false, "default": "directus", "description": "Database name" },
+    { "name": "PUBLIC_URL", "required": false, "default": "http://localhost:8011", "description": "Public URL of the Directus API/admin" },
+    { "name": "CORS_ORIGIN", "required": false, "default": "*", "description": "Allowed browser origins" }
+  ],
+  "auth": { "model": "cms-admin", "description": "Directus admin (e-mail/password → JWT via POST /auth/login; admin SPA at /admin). Anonymous requests use the built-in Public policy, which the bootstrap script grants read on categories and on events where status = published; writes and system collections return 403." },
+  "credentials": [
+    { "role": "admin", "username": "admin@kilavuz.dev", "password": "Admin123!" }
+  ],
+  "routes": {
+    "public": ["/server/health", "/items/events?filter[status][_eq]=published&fields=*,category.name", "/items/categories", "/auth/login"],
+    "authenticated": ["/items/directus_users", "/collections", "/permissions"],
+    "admin": ["/admin"]
+  },
+  "persistence": "Named volumes db_data (Postgres), directus_uploads, directus_extensions. Data model versioned in snapshot/schema.yaml (bind-mounted at /directus/snapshot). Seed data inserted by scripts/bootstrap.sh when collections are empty.",
+  "notes": "Docker-only. After `docker compose up -d` wait for GET /server/health = 200 (Directus creates its system tables and the admin user from ADMIN_EMAIL/ADMIN_PASSWORD on first boot), then run scripts/bootstrap.sh once (idempotent; needs python3 on the host; honours DIRECTUS_URL). Alternative: `docker compose exec directus npx directus schema apply --yes /directus/snapshot/schema.yaml` first, then bootstrap.sh for permissions + seed. Frontend on 8111 is plain files from ./frontend served by nginx; if not on localhost, edit frontend/config.js (window.API_URL) and set PUBLIC_URL/CORS_ORIGIN. Postgres is internal only. Health returns 200 JSON."
+}

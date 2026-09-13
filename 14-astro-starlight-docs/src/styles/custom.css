@@ -1,0 +1,38 @@
+/* Kestrel accent palette (teal) — overrides Starlight's default blue.
+   Generated with the Starlight colour tool and tuned by hand. */
+:root {
+  --sl-color-accent-low: #0a3d42;
+  --sl-color-accent: #11a0ac;
+  --sl-color-accent-high: #b3ecf1;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #eceef2;
+  --sl-color-gray-2: #c0c2c7;
+  --sl-color-gray-3: #888b96;
+  --sl-color-gray-4: #545861;
+  --sl-color-gray-5: #353841;
+  --sl-color-gray-6: #24272f;
+  --sl-color-black: #17181c;
+  --sl-font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --sl-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+:root[data-theme='light'] {
+  --sl-color-accent-low: #cdf1f4;
+  --sl-color-accent: #0b7c86;
+  --sl-color-accent-high: #063e43;
+  --sl-color-white: #17181c;
+  --sl-color-gray-1: #24272f;
+  --sl-color-gray-2: #353841;
+  --sl-color-gray-3: #545861;
+  --sl-color-gray-4: #888b96;
+  --sl-color-gray-5: #c0c2c7;
+  --sl-color-gray-6: #eceef2;
+  --sl-color-gray-7: #f5f6f8;
+  --sl-color-black: #ffffff;
+}
+
+/* Splash page hero polish */
+.hero h1 { letter-spacing: -0.02em; }
+.hero .tagline { max-width: 48ch; }
+
+/* Kestrel-style command tables: keep code columns from wrapping */
+.sl-markdown-content table code { white-space: nowrap; }

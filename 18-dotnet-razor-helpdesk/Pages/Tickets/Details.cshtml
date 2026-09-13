@@ -1,0 +1,81 @@
+@page "{id:int}"
+@model Helpdesk.Pages.Tickets.DetailsModel
+@{
+    var t = Model.Ticket;
+    ViewData["Title"] = $"#{t.Id} {t.Title}";
+}
+<nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-page="/Tickets/Index">Biletler</a></li><li class="breadcrumb-item active">#@t.Id</li></ol></nav>
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card p-4 mb-4">
+            <div class="d-flex flex-wrap gap-2 mb-2">
+                <span class="badge badge-status-@t.Status">@Labels.Status(t.Status)</span>
+                <span class="badge badge-priority-@t.Priority">@Labels.Priority(t.Priority) öncelik</span>
+                <span class="badge text-bg-light border">@t.Category?.Name</span>
+            </div>
+            <h1 class="h3">#@t.Id · @t.Title</h1>
+            <p class="text-muted small mb-3">@t.Requester?.DisplayName tarafından @t.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") tarihinde açıldı · son güncelleme @t.UpdatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</p>
+            <p class="mb-0" style="white-space: pre-line">@t.Description</p>
+        </div>
+
+        <h2 class="h5 mb-3">Yorumlar (@t.Comments.Count)</h2>
+        @foreach (var c in t.Comments)
+        {
+            <div class="comment p-3 mb-2 rounded @(c.AuthorId == Model.CurrentUserId ? "mine" : "")">
+                <div class="d-flex justify-content-between small text-muted mb-1">
+                    <strong class="text-dark">@c.Author?.DisplayName</strong>
+                    <span>@c.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                </div>
+                <div style="white-space: pre-line">@c.Body</div>
+            </div>
+        }
+        @if (t.Comments.Count == 0)
+        {
+            <p class="text-muted">Henüz yorum yok.</p>
+        }
+        <form method="post" asp-page-handler="Comment" class="card p-3 mt-3">
+            <label asp-for="CommentBody" class="form-label fw-semibold">Yorum ekle</label>
+            <textarea asp-for="CommentBody" class="form-control mb-2" rows="3" placeholder="Güncelleme veya soru yazın…"></textarea>
+            <span asp-validation-for="CommentBody" class="text-danger small"></span>
+            <button type="submit" class="btn btn-primary align-self-start">Gönder</button>
+        </form>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card p-3 mb-3">
+            <h2 class="h6 text-uppercase text-muted">Atama</h2>
+            <p class="mb-2">@(t.Assignee?.DisplayName ?? "Henüz atanmadı")</p>
+            @if (Model.IsStaff)
+            {
+                <div class="d-flex gap-2">
+                    @if (t.AssigneeId != Model.CurrentUserId)
+                    {
+                        <form method="post" asp-page-handler="Assign" class="m-0"><button class="btn btn-sm btn-outline-primary" type="submit">Bana ata</button></form>
+                    }
+                    @if (t.AssigneeId is not null)
+                    {
+                        <form method="post" asp-page-handler="Assign" asp-route-clear="true" class="m-0"><button class="btn btn-sm btn-outline-secondary" type="submit">Atamayı kaldır</button></form>
+                    }
+                </div>
+            }
+        </div>
+        <div class="card p-3">
+            <h2 class="h6 text-uppercase text-muted">Durum</h2>
+            @if (Model.IsStaff)
+            {
+                <div class="d-grid gap-2">
+                    @foreach (TicketStatus s in Enum.GetValues<TicketStatus>())
+                    {
+                        <form method="post" asp-page-handler="Status" asp-route-status="@s" class="m-0">
+                            <button class="btn btn-sm w-100 @(t.Status == s ? "btn-primary" : "btn-outline-primary")" type="submit" disabled="@(t.Status == s)">@Labels.Status(s)</button>
+                        </form>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="small text-muted mb-0">Durumu yalnızca destek ekibi (Agent/Admin) değiştirebilir. Sorunuz çözüldüyse yorum bırakın.</p>
+            }
+        </div>
+    </div>
+</div>

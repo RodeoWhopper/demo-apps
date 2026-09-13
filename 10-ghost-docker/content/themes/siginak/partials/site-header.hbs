@@ -1,0 +1,14 @@
+<header class="site-header">
+    <div class="container site-header__inner">
+        <a class="site-header__brand" href="{{@site.url}}">
+            {{#if @site.logo}}
+                <img src="{{@site.logo}}" alt="{{@site.title}}">
+            {{else}}
+                <span class="site-header__mark" aria-hidden="true">S</span>{{@site.title}}
+            {{/if}}
+        </a>
+        <nav class="site-nav" aria-label="Menü">
+            {{navigation}}
+        </nav>
+    </div>
+</header>

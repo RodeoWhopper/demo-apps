@@ -1,0 +1,40 @@
+# Orbit Tasks - two services: FastAPI (api, 8015) and React SPA behind nginx (web, 5015).
+# The web container proxies /api/* to the api container, so the SPA is built with VITE_API_URL=/api.
+services:
+  api:
+    build: ./api
+    container_name: orbit-api
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-change-me-demo-orbit-jwt-secret}
+      ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-60}
+      DATABASE_URL: sqlite:////app/data/orbit.db
+      # Same-origin via the nginx proxy needs no CORS; these allow direct access on :8015 too.
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5015,http://127.0.0.1:5015}
+      AUTO_SEED: "1"
+    ports:
+      - "8015:8015"
+    volumes:
+      - orbit-api-data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8015/healthz').status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_API_URL: /api
+    container_name: orbit-web
+    ports:
+      - "5015:5015"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  orbit-api-data:

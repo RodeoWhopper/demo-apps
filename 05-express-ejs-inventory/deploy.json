@@ -1,0 +1,40 @@
+{
+  "name": "express-ejs-inventory",
+  "folder": "05-express-ejs-inventory",
+  "title": "Depot Ninety – warehouse inventory (Express 4 + EJS)",
+  "description": "Classic server-rendered multi-page app for a fictional warehouse: item CRUD with search/filters, a low-stock admin report, express-session cookies, hand-rolled CSRF tokens and a lowdb JSON store.",
+  "kind": "ssr",
+  "stack": ["node", "express", "ejs", "express-session", "lowdb", "bcryptjs", "tailwindcss-cdn"],
+  "runtime": "node@22",
+  "port": 3005,
+  "extra_ports": [],
+  "install": "npm ci --omit=dev",
+  "build": null,
+  "start": "npm start",
+  "dev": "npm run dev",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/healthz", "expect_status": 200 },
+  "env": [
+    { "name": "SESSION_SECRET", "required": false, "default": "change-me-demo-secret-depot", "description": "Secret that signs the express-session cookie. Falls back to the demo value (with a startup warning) when unset; set a long random string in real deployments." },
+    { "name": "PORT", "required": false, "default": "3005", "description": "HTTP port." },
+    { "name": "HOST", "required": false, "default": "0.0.0.0", "description": "Bind address." },
+    { "name": "COOKIE_SECURE", "required": false, "default": "false", "description": "Set \"true\" behind HTTPS so the session cookie gets the Secure flag (keep false for plain-HTTP smoke tests)." },
+    { "name": "TRUST_PROXY", "required": false, "default": "false", "description": "Set \"true\" behind a reverse proxy (Express trust proxy = 1)." },
+    { "name": "DATA_DIR", "required": false, "default": "./data (Docker: /app/data)", "description": "Directory holding inventory.json (auto-created and seeded on first start)." }
+  ],
+  "auth": {
+    "model": "server-session",
+    "description": "express-session (in-memory MemoryStore) with cookie `depot.sid`; passwords are bcryptjs hashes. Every state-changing POST must carry the `_csrf` field that matches the token stored in the session (scrape it from any rendered form, e.g. the login page). Unauthenticated page requests are redirected 302 to /login; /admin and item deletion require role admin (403 otherwise)."
+  },
+  "credentials": [
+    { "role": "admin", "username": "admin", "password": "admin123" },
+    { "role": "clerk", "username": "clerk", "password": "clerk123" }
+  ],
+  "routes": {
+    "public": ["/healthz", "/login"],
+    "authenticated": ["/", "/items", "/items/new", "/items/:id/edit"],
+    "admin": ["/admin", "/items/:id/delete"]
+  },
+  "persistence": "lowdb JSON file at data/inventory.json (DATA_DIR), auto-created and seeded with 2 users, 3 categories and 15 items on first start. Sessions live in process memory and are lost on restart.",
+  "notes": "Needs a writable DATA_DIR (Docker: mount a volume at /app/data). Single-process only (MemoryStore); express-session prints a MemoryStore warning in production - expected for this demo. Tailwind is loaded from cdn.tailwindcss.com in the browser, so end users need internet access for styling (the server itself makes no outbound calls). Smoke test: GET /login with a cookie jar, scrape `name=\"_csrf\" value=\"...\"`, POST /login (form-urlencoded: _csrf, username, password) -> 302 to /items, then GET /items -> 200; GET /admin as clerk -> 403, as admin -> 200. `npm audit` reports 2 moderate advisories in Express 4's transitive `qs`; the fix would be Express 5."
+}

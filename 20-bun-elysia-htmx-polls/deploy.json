@@ -1,0 +1,39 @@
+{
+  "name": "bun-elysia-htmx-polls",
+  "folder": "20-bun-elysia-htmx-polls",
+  "title": "Pulsebox - live polls",
+  "description": "Live polling app on the Bun runtime with Elysia, server-side JSX templates and HTMX partial swaps (votes and auto-refreshing results). Passwordless email-OTP login with a signed session cookie and an env-defined admin list; bun:sqlite storage.",
+  "kind": "ssr",
+  "stack": ["bun", "elysia", "typescript", "htmx", "sqlite"],
+  "runtime": "bun@1.4",
+  "port": 3020,
+  "extra_ports": [],
+  "install": "bun install --frozen-lockfile",
+  "build": null,
+  "start": "bun src/index.tsx",
+  "dev": "bun --watch src/index.tsx",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/healthz", "expect_status": 200 },
+  "env": [
+    { "name": "APP_ENV", "required": false, "default": "development (image sets production)", "description": "Anything other than `production` enables GET /dev/last-code and shows the OTP on the verify page. Set `production` for real deployments." },
+    { "name": "PORT", "required": false, "default": "3020", "description": "HTTP port." },
+    { "name": "SESSION_SECRET", "required": true, "default": "change-me-demo-secret", "description": "HMAC-SHA256 key that signs the session cookie. The demo default works but is insecure; a warning is logged in production." },
+    { "name": "ADMIN_EMAILS", "required": false, "default": "admin@pulsebox.app", "description": "Comma-separated emails that receive the admin role after logging in." },
+    { "name": "DB_PATH", "required": false, "default": "data/pulsebox.sqlite (image: /app/data/pulsebox.sqlite)", "description": "SQLite database file; created and seeded with 3 polls on first start." }
+  ],
+  "auth": {
+    "model": "otp-passwordless",
+    "description": "Email + 6-digit one-time code (10 min, single use). No mail provider: the code is printed to the server log and, when APP_ENV != production, returned by GET /dev/last-code?email=... and shown on the verify page. Success sets an HMAC-signed httpOnly cookie `pb_session` (7 days). Admin = email listed in ADMIN_EMAILS."
+  },
+  "credentials": [
+    { "role": "admin", "username": "admin@pulsebox.app", "password": "(no password - fetch the OTP from the server log or GET /dev/last-code?email=admin@pulsebox.app)" },
+    { "role": "user", "username": "any@email.address", "password": "(no password - OTP as above)" }
+  ],
+  "routes": {
+    "public": ["/", "/polls/{id}", "/polls/{id}/results", "/polls/{id}/vote", "/login", "/login/verify", "/logout", "/healthz", "/dev/last-code"],
+    "authenticated": ["/new", "/new/option"],
+    "admin": ["/admin", "/admin/polls/{id}/close", "/admin/polls/{id}/reopen", "/admin/polls/{id}"]
+  },
+  "persistence": "sqlite file via bun:sqlite at DB_PATH (image: /app/data/pulsebox.sqlite on the /app/data volume); schema created and 3 demo polls seeded automatically when the polls table is empty",
+  "notes": "Runs as the non-root `bun` user (uid 1000): a bind-mounted data directory must be writable by that uid (named volumes are fine). There is no email delivery - to log in, read the OTP from `docker logs` or call /dev/last-code (non-production only). Set APP_ENV=production and a real SESSION_SECRET for anything public. HTMX is loaded from unpkg CDN; no build step."
+}

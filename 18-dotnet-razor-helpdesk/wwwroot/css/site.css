@@ -1,0 +1,36 @@
+:root {
+  --md-teal: #0f766e;
+  --md-teal-dark: #115e59;
+  --md-ink: #1e293b;
+  --md-bg: #f1f5f9;
+  --bs-primary: #0f766e;
+  --bs-primary-rgb: 15, 118, 110;
+  --bs-link-color: #0f766e;
+  --bs-link-hover-color: #115e59;
+}
+body { background: var(--md-bg); color: var(--md-ink); }
+.navbar-md { background: var(--md-ink); }
+.navbar-md .navbar-brand { color: #fff; font-weight: 700; letter-spacing: .01em; }
+.navbar-md .navbar-brand .dot { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; background: #2dd4bf; margin-right: .45rem; }
+.navbar-md .nav-link { color: rgba(255, 255, 255, .78); }
+.navbar-md .nav-link:hover, .navbar-md .nav-link.active { color: #fff; }
+.btn-primary { background: var(--md-teal); border-color: var(--md-teal); }
+.btn-primary:hover { background: var(--md-teal-dark); border-color: var(--md-teal-dark); }
+.btn-outline-primary { color: var(--md-teal); border-color: var(--md-teal); }
+.btn-outline-primary:hover { background: var(--md-teal); border-color: var(--md-teal); }
+.card { border: 0; box-shadow: 0 1px 3px rgba(15, 23, 42, .08); }
+.hero { background: linear-gradient(120deg, #0f766e, #0e7490); color: #fff; border-radius: 1rem; }
+.stat-tile { background: #fff; border-radius: .75rem; padding: 1.25rem; box-shadow: 0 1px 3px rgba(15, 23, 42, .08); }
+.stat-tile .num { font-size: 2rem; font-weight: 700; color: var(--md-teal); line-height: 1; }
+.badge-status-Open { background: #0ea5e9; }
+.badge-status-InProgress { background: #f59e0b; color: #1e293b; }
+.badge-status-Resolved { background: #22c55e; }
+.badge-status-Closed { background: #64748b; }
+.badge-priority-Low { background: #e2e8f0; color: #334155; }
+.badge-priority-Medium { background: #bfdbfe; color: #1e3a8a; }
+.badge-priority-High { background: #fed7aa; color: #7c2d12; }
+.badge-priority-Critical { background: #fecaca; color: #7f1d1d; }
+.comment { border-left: 3px solid var(--md-teal); background: #fff; }
+.comment.mine { border-left-color: #f59e0b; }
+.auth-card { max-width: 440px; margin: 3rem auto; }
+footer { color: #64748b; font-size: .85rem; }

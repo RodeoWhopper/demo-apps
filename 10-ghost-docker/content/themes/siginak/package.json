@@ -1,0 +1,29 @@
+{
+  "name": "siginak",
+  "description": "Sığınak – a dark, typographic newsletter/blog theme for Ghost 5 with a /newsletter/ channel and an /archive/ list.",
+  "version": "1.0.0",
+  "engines": {
+    "ghost": ">=5.0.0"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Sığınak",
+    "email": "owner@siginak.dev",
+    "url": "http://localhost:8010"
+  },
+  "keywords": ["ghost", "theme", "ghost-theme", "newsletter"],
+  "config": {
+    "posts_per_page": 8,
+    "image_sizes": {
+      "s": { "width": 400 },
+      "m": { "width": 800 },
+      "l": { "width": 1400 }
+    },
+    "custom": {
+      "show_reading_time": {
+        "type": "boolean",
+        "default": true
+      }
+    }
+  }
+}

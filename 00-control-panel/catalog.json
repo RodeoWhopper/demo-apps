@@ -1,0 +1,15 @@
+{
+  "_comment": "Panel-local extras per app folder. 'setup' is a one-shot post-start script run with the app folder as cwd.",
+  "08-wordpress-docker": {
+    "setup": { "command": "./setup.sh", "label": "Run WordPress setup", "hint": "Installs WP core, activates the Çınar theme and seeds pages/projects (1-2 min, idempotent)." }
+  },
+  "09-strapi-headless-cms": {
+    "setup": { "command": "scripts/create-admin.sh --docker", "label": "Create Strapi admin", "hint": "Creates admin@tarla.dev / Admin123! inside the running cms container (idempotent)." }
+  },
+  "10-ghost-docker": {
+    "setup": { "command": "scripts/setup-owner.sh", "label": "Run Ghost setup", "hint": "Creates the owner account, activates the Sığınak theme and seeds posts (idempotent). Wait until health is green first." }
+  },
+  "11-directus-docker": {
+    "setup": { "command": "scripts/bootstrap.sh", "label": "Run Directus bootstrap", "hint": "Creates collections, public permissions and seed events (idempotent). Wait until health is green first." }
+  }
+}

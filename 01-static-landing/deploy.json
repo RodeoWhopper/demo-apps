@@ -1,0 +1,23 @@
+{
+  "name": "static-landing",
+  "folder": "01-static-landing",
+  "title": "Nordwind Coffee Roasters — static landing page",
+  "description": "Marketing landing page for a fictional Bergen coffee roastery. Pure HTML5 + CSS + vanilla JS with no build step and no npm; served by nginx with gzip, cache headers and a custom 404.",
+  "kind": "static",
+  "stack": ["html", "css", "javascript", "nginx"],
+  "runtime": "nginx@1.27",
+  "port": 8081,
+  "extra_ports": [],
+  "install": null,
+  "build": null,
+  "start": "./serve.sh",
+  "dev": "./serve.sh",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/", "expect_status": 200 },
+  "env": [],
+  "auth": { "model": "none", "description": "Public marketing site; no authentication." },
+  "credentials": [],
+  "routes": { "public": ["/", "/about.html", "/contact.html", "/404.html", "/robots.txt", "/sitemap.xml", "/site.webmanifest"], "authenticated": [], "admin": [] },
+  "persistence": "none (fully static; contact form is client-side only and posts nowhere)",
+  "notes": "No build step. Serve the folder root as document root. nginx.conf maps unknown paths to the custom 404.html; python http.server (serve.sh) does not."
+}

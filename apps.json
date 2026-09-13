@@ -1,0 +1,2114 @@
+{
+  "count": 21,
+  "apps": [
+    {
+      "name": "static-landing",
+      "folder": "01-static-landing",
+      "title": "Nordwind Coffee Roasters — static landing page",
+      "description": "Marketing landing page for a fictional Bergen coffee roastery. Pure HTML5 + CSS + vanilla JS with no build step and no npm; served by nginx with gzip, cache headers and a custom 404.",
+      "kind": "static",
+      "stack": [
+        "html",
+        "css",
+        "javascript",
+        "nginx"
+      ],
+      "runtime": "nginx@1.27",
+      "port": 8081,
+      "extra_ports": [],
+      "install": null,
+      "build": null,
+      "start": "./serve.sh",
+      "dev": "./serve.sh",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/",
+        "expect_status": 200
+      },
+      "env": [],
+      "auth": {
+        "model": "none",
+        "description": "Public marketing site; no authentication."
+      },
+      "credentials": [],
+      "routes": {
+        "public": [
+          "/",
+          "/about.html",
+          "/contact.html",
+          "/404.html",
+          "/robots.txt",
+          "/sitemap.xml",
+          "/site.webmanifest"
+        ],
+        "authenticated": [],
+        "admin": []
+      },
+      "persistence": "none (fully static; contact form is client-side only and posts nowhere)",
+      "notes": "No build step. Serve the folder root as document root. nginx.conf maps unknown paths to the custom 404.html; python http.server (serve.sh) does not."
+    },
+    {
+      "name": "nextjs-saas-dashboard",
+      "folder": "02-nextjs-saas-dashboard",
+      "title": "Lumeo Analytics – SaaS dashboard (Next.js 15)",
+      "description": "Fictional product-analytics SaaS: marketing pages plus a role-protected dashboard and admin area. Auth is a jose-signed HS256 JWT in an httpOnly cookie, enforced by Next.js middleware.",
+      "kind": "ssr",
+      "stack": [
+        "node",
+        "nextjs",
+        "react",
+        "typescript",
+        "tailwindcss",
+        "jose",
+        "bcryptjs"
+      ],
+      "runtime": "node@22",
+      "port": 3002,
+      "extra_ports": [],
+      "install": "npm ci",
+      "build": "npm run build",
+      "start": "npm start",
+      "dev": "npm run dev",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/api/health",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "AUTH_SECRET",
+          "required": false,
+          "default": "change-me-demo-secret-lumeo",
+          "description": "HS256 secret used to sign/verify the session JWT. Falls back to the demo value when unset; set a long random string in real deployments."
+        },
+        {
+          "name": "PORT",
+          "required": false,
+          "default": "3002",
+          "description": "HTTP port of the standalone server."
+        },
+        {
+          "name": "HOST",
+          "required": false,
+          "default": "0.0.0.0",
+          "description": "Bind address (npm start maps it to Next's HOSTNAME)."
+        },
+        {
+          "name": "COOKIE_SECURE",
+          "required": false,
+          "default": "false",
+          "description": "Set to \"true\" behind HTTPS so the session cookie gets the Secure flag. Keep false for plain-HTTP smoke tests."
+        },
+        {
+          "name": "DATA_DIR",
+          "required": false,
+          "default": "./data (Docker: /app/data)",
+          "description": "Directory holding db.json (auto-created and seeded on first request)."
+        }
+      ],
+      "auth": {
+        "model": "jwt-cookie",
+        "description": "Login (Server Action form or POST /api/login) verifies a bcryptjs hash and sets cookie `lumeo_session` = HS256 JWT (8h, httpOnly, SameSite=Lax). middleware.ts verifies it for /dashboard/* (any user) and /admin/* (role admin); unauthenticated -> 307 to /login?next=..., non-admin on /admin -> 403."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "admin@lumeo.dev",
+          "password": "Admin123!"
+        },
+        {
+          "role": "member",
+          "username": "user@lumeo.dev",
+          "password": "User123!"
+        },
+        {
+          "role": "member",
+          "username": "ops@lumeo.dev",
+          "password": "User123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/",
+          "/pricing",
+          "/login",
+          "/api/health",
+          "/api/login"
+        ],
+        "authenticated": [
+          "/dashboard",
+          "/dashboard/projects/[id]",
+          "/api/projects",
+          "/api/logout"
+        ],
+        "admin": [
+          "/admin"
+        ]
+      },
+      "persistence": "JSON file at data/db.json (DATA_DIR), auto-created and seeded with 3 users + 8 projects on first request; role changes are written back to it.",
+      "notes": "Requires a writable DATA_DIR (Docker: mount a volume at /app/data). `npm start` runs the Next.js standalone server (.next/standalone/server.js) produced by `npm run build`; the build's postbuild step copies static assets into it. Smoke test: POST /api/login with JSON {email,password} using a cookie jar, then GET /dashboard (200) vs. without cookie (307 to /login). `npm audit` reports advisories only in Next's bundled postcss (transitive; fix requires Next 16)."
+    },
+    {
+      "name": "django-blog-admin",
+      "folder": "03-django-blog-admin",
+      "title": "Pergament - Django long-form blog with admin backoffice",
+      "description": "A server-rendered publishing blog (Markdown posts, categories, moderated comments, RSS, search) using classic Django session auth and the built-in Django admin as its CMS-style backoffice.",
+      "kind": "cms",
+      "stack": [
+        "python",
+        "django",
+        "sqlite",
+        "gunicorn",
+        "whitenoise"
+      ],
+      "runtime": "python@3.12",
+      "port": 8003,
+      "extra_ports": [],
+      "install": "python -m venv .venv && .venv/bin/pip install -r requirements.txt",
+      "build": ".venv/bin/python manage.py migrate --noinput && .venv/bin/python manage.py collectstatic --noinput && .venv/bin/python manage.py seed_demo",
+      "start": ".venv/bin/gunicorn pergament.wsgi:application --bind 0.0.0.0:8003 --workers 2",
+      "dev": "DJANGO_DEBUG=1 .venv/bin/python manage.py runserver 0.0.0.0:8003",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/healthz/",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "DJANGO_SECRET_KEY",
+          "required": true,
+          "default": "change-me-demo-secret-pergament",
+          "description": "Django SECRET_KEY used for sessions/CSRF signing. Set a long random value in production."
+        },
+        {
+          "name": "DJANGO_DEBUG",
+          "required": false,
+          "default": "0",
+          "description": "1/true enables Django debug mode (never in production)."
+        },
+        {
+          "name": "DJANGO_ALLOWED_HOSTS",
+          "required": false,
+          "default": "*",
+          "description": "Comma-separated list of allowed Host header values."
+        },
+        {
+          "name": "DJANGO_CSRF_TRUSTED_ORIGINS",
+          "required": false,
+          "default": "",
+          "description": "Comma-separated origins WITH scheme (e.g. https://blog.example.com); required for form POSTs when served over HTTPS behind a proxy."
+        },
+        {
+          "name": "DJANGO_DB_PATH",
+          "required": false,
+          "default": "data/db.sqlite3",
+          "description": "SQLite file path; absolute or relative to the project root. Parent directory is created automatically. The Docker image sets /app/data/db.sqlite3."
+        },
+        {
+          "name": "PORT",
+          "required": false,
+          "default": "8003",
+          "description": "Port gunicorn binds to (entrypoint.sh only)."
+        },
+        {
+          "name": "GUNICORN_WORKERS",
+          "required": false,
+          "default": "2",
+          "description": "Number of gunicorn workers (entrypoint.sh only)."
+        }
+      ],
+      "auth": {
+        "model": "server-session",
+        "description": "Django contrib.auth session cookies (sessionid + csrftoken). /accounts/login/ POSTs a CSRF-protected form; /write/, /dashboard/ and post editing require a logged-in user; /admin/ requires is_staff. Logout is POST-only."
+      },
+      "credentials": [
+        {
+          "role": "admin (superuser, staff)",
+          "username": "admin",
+          "password": "Admin123!"
+        },
+        {
+          "role": "author (non-staff)",
+          "username": "editor",
+          "password": "Editor123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/",
+          "/post/<slug>/",
+          "/category/<slug>/",
+          "/search/?q=",
+          "/feed/",
+          "/healthz/",
+          "/accounts/login/",
+          "/admin/login/"
+        ],
+        "authenticated": [
+          "/write/",
+          "/dashboard/",
+          "/post/<slug>/edit/",
+          "/accounts/logout/"
+        ],
+        "admin": [
+          "/admin/"
+        ]
+      },
+      "persistence": "SQLite file at data/db.sqlite3 (DJANGO_DB_PATH); Docker image stores it at /app/data (declared VOLUME). Created by `migrate`, seeded idempotently by `seed_demo` (entrypoint.sh runs both on every start).",
+      "notes": "Single container, no external services. entrypoint.sh runs migrate -> collectstatic -> seed_demo -> gunicorn on $PORT (8003). Mount a writable volume at /app/data to keep posts across restarts. When served over HTTPS via a reverse proxy set DJANGO_CSRF_TRUSTED_ORIGINS to the public origin, otherwise login/comment form POSTs fail CSRF checks. Static files are served by WhiteNoise from the same process (no separate static server needed). Requires Python 3.12+ locally (verified on 3.14; Docker image uses 3.12)."
+    },
+    {
+      "name": "flask-jwt-notes-api",
+      "folder": "04-flask-jwt-notes-api",
+      "title": "Scribble API - Flask JSON notes API with Bearer JWT",
+      "description": "A JSON REST API for personal notes secured with stateless Bearer JWTs (15-minute access + 7-day refresh tokens, HS256) and a role claim for admin endpoints, with an embedded Swagger UI reading a hand-written OpenAPI 3.1 spec.",
+      "kind": "api",
+      "stack": [
+        "python",
+        "flask",
+        "sqlalchemy",
+        "sqlite",
+        "pyjwt",
+        "gunicorn",
+        "openapi"
+      ],
+      "runtime": "python@3.12",
+      "port": 5004,
+      "extra_ports": [],
+      "install": "python -m venv .venv && .venv/bin/pip install -r requirements.txt",
+      "build": null,
+      "start": ".venv/bin/gunicorn -b 0.0.0.0:5004 --workers 2 \"app:create_app()\"",
+      "dev": ".venv/bin/flask --app app run --port 5004 --debug",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/healthz",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "JWT_SECRET",
+          "required": true,
+          "default": "change-me-demo-jwt-secret",
+          "description": "HS256 signing secret for access and refresh tokens. Set a long random value in production."
+        },
+        {
+          "name": "SECRET_KEY",
+          "required": false,
+          "default": "change-me-demo-flask-secret",
+          "description": "Flask SECRET_KEY (not used for JWTs; kept for Flask internals)."
+        },
+        {
+          "name": "JWT_ACCESS_MINUTES",
+          "required": false,
+          "default": "15",
+          "description": "Access token lifetime in minutes."
+        },
+        {
+          "name": "JWT_REFRESH_DAYS",
+          "required": false,
+          "default": "7",
+          "description": "Refresh token lifetime in days."
+        },
+        {
+          "name": "DATABASE_PATH",
+          "required": false,
+          "default": "data/scribble.db",
+          "description": "SQLite file path; absolute or relative to the project root (parent dir auto-created). Docker image sets /app/data/scribble.db."
+        },
+        {
+          "name": "AUTO_SEED",
+          "required": false,
+          "default": "1",
+          "description": "Seed demo users/notes at startup when the users table is empty."
+        },
+        {
+          "name": "CORS_ORIGINS",
+          "required": false,
+          "default": "*",
+          "description": "Allowed CORS origins ('*' or comma-separated list)."
+        },
+        {
+          "name": "PORT",
+          "required": false,
+          "default": "5004",
+          "description": "Bind port (Docker CMD only)."
+        },
+        {
+          "name": "GUNICORN_WORKERS",
+          "required": false,
+          "default": "2",
+          "description": "Gunicorn worker count (Docker CMD only)."
+        }
+      ],
+      "auth": {
+        "model": "bearer-jwt",
+        "description": "POST /auth/login (JSON email+password) returns access_token (15 min) and refresh_token (7 days). Send 'Authorization: Bearer <access_token>' on protected routes; POST /auth/refresh with the refresh token to renew. Admin routes require the JWT claim role=admin (403 otherwise). No cookies, no sessions."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "admin@scribble.dev",
+          "password": "Admin123!"
+        },
+        {
+          "role": "user",
+          "username": "demo@scribble.dev",
+          "password": "Demo123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/",
+          "/docs",
+          "/openapi.yaml",
+          "/healthz",
+          "/auth/register",
+          "/auth/login",
+          "/auth/refresh"
+        ],
+        "authenticated": [
+          "/auth/me",
+          "/notes",
+          "/notes/<id>"
+        ],
+        "admin": [
+          "/admin/users",
+          "/admin/users/<id>",
+          "/admin/stats"
+        ]
+      },
+      "persistence": "SQLite file at data/scribble.db (DATABASE_PATH); Docker image stores it at /app/data (declared VOLUME). Tables are created and demo data seeded automatically on first start (create_app), or explicitly with `flask --app app seed`.",
+      "notes": "Single container, no external services. Startup is safe with multiple gunicorn workers (concurrent create_all/seed is tolerated). The docs page loads swagger-ui-dist from cdn.jsdelivr.net at browser time; the API itself has no runtime network dependency. GET / redirects (302) to /docs. Mount a writable volume at /app/data to keep data across restarts."
+    },
+    {
+      "name": "express-ejs-inventory",
+      "folder": "05-express-ejs-inventory",
+      "title": "Depot Ninety – warehouse inventory (Express 4 + EJS)",
+      "description": "Classic server-rendered multi-page app for a fictional warehouse: item CRUD with search/filters, a low-stock admin report, express-session cookies, hand-rolled CSRF tokens and a lowdb JSON store.",
+      "kind": "ssr",
+      "stack": [
+        "node",
+        "express",
+        "ejs",
+        "express-session",
+        "lowdb",
+        "bcryptjs",
+        "tailwindcss-cdn"
+      ],
+      "runtime": "node@22",
+      "port": 3005,
+      "extra_ports": [],
+      "install": "npm ci --omit=dev",
+      "build": null,
+      "start": "npm start",
+      "dev": "npm run dev",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/healthz",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "SESSION_SECRET",
+          "required": false,
+          "default": "change-me-demo-secret-depot",
+          "description": "Secret that signs the express-session cookie. Falls back to the demo value (with a startup warning) when unset; set a long random string in real deployments."
+        },
+        {
+          "name": "PORT",
+          "required": false,
+          "default": "3005",
+          "description": "HTTP port."
+        },
+        {
+          "name": "HOST",
+          "required": false,
+          "default": "0.0.0.0",
+          "description": "Bind address."
+        },
+        {
+          "name": "COOKIE_SECURE",
+          "required": false,
+          "default": "false",
+          "description": "Set \"true\" behind HTTPS so the session cookie gets the Secure flag (keep false for plain-HTTP smoke tests)."
+        },
+        {
+          "name": "TRUST_PROXY",
+          "required": false,
+          "default": "false",
+          "description": "Set \"true\" behind a reverse proxy (Express trust proxy = 1)."
+        },
+        {
+          "name": "DATA_DIR",
+          "required": false,
+          "default": "./data (Docker: /app/data)",
+          "description": "Directory holding inventory.json (auto-created and seeded on first start)."
+        }
+      ],
+      "auth": {
+        "model": "server-session",
+        "description": "express-session (in-memory MemoryStore) with cookie `depot.sid`; passwords are bcryptjs hashes. Every state-changing POST must carry the `_csrf` field that matches the token stored in the session (scrape it from any rendered form, e.g. the login page). Unauthenticated page requests are redirected 302 to /login; /admin and item deletion require role admin (403 otherwise)."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "admin",
+          "password": "admin123"
+        },
+        {
+          "role": "clerk",
+          "username": "clerk",
+          "password": "clerk123"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/healthz",
+          "/login"
+        ],
+        "authenticated": [
+          "/",
+          "/items",
+          "/items/new",
+          "/items/:id/edit"
+        ],
+        "admin": [
+          "/admin",
+          "/items/:id/delete"
+        ]
+      },
+      "persistence": "lowdb JSON file at data/inventory.json (DATA_DIR), auto-created and seeded with 2 users, 3 categories and 15 items on first start. Sessions live in process memory and are lost on restart.",
+      "notes": "Needs a writable DATA_DIR (Docker: mount a volume at /app/data). Single-process only (MemoryStore); express-session prints a MemoryStore warning in production - expected for this demo. Tailwind is loaded from cdn.tailwindcss.com in the browser, so end users need internet access for styling (the server itself makes no outbound calls). Smoke test: GET /login with a cookie jar, scrape `name=\"_csrf\" value=\"...\"`, POST /login (form-urlencoded: _csrf, username, password) -> 302 to /items, then GET /items -> 200; GET /admin as clerk -> 403, as admin -> 200. `npm audit` reports 2 moderate advisories in Express 4's transitive `qs`; the fix would be Express 5."
+    },
+    {
+      "name": "php-vanilla-admin",
+      "folder": "06-php-vanilla-admin",
+      "title": "Bakkal Panel - small-shop product & order admin",
+      "description": "Framework-free PHP 8.3 admin panel for a corner grocery: products CRUD, orders with status workflow and admin-only user management. Hand-written router, native PHP sessions, PDO + SQLite.",
+      "kind": "ssr",
+      "stack": [
+        "php",
+        "apache",
+        "sqlite",
+        "tailwind-cdn"
+      ],
+      "runtime": "php@8.3",
+      "port": 8006,
+      "extra_ports": [],
+      "install": null,
+      "build": null,
+      "start": "php -S 0.0.0.0:8006 -t public public/index.php",
+      "dev": "APP_ENV=development php -S localhost:8006 -t public public/index.php",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/healthz",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "APP_ENV",
+          "required": false,
+          "default": "production",
+          "description": "Set to development to show stack traces on the 500 page."
+        },
+        {
+          "name": "APP_KEY",
+          "required": false,
+          "default": "change-me-demo-key",
+          "description": "Read at boot for parity with the other demo apps; not used cryptographically."
+        },
+        {
+          "name": "DB_PATH",
+          "required": false,
+          "default": "data/bakkal.sqlite (Docker: /var/www/html/data/bakkal.sqlite)",
+          "description": "Path of the SQLite database file; created and seeded on first request."
+        }
+      ],
+      "auth": {
+        "model": "server-session",
+        "description": "Native PHP $_SESSION cookie (bakkal_session) with password_hash/password_verify, per-session CSRF token on every POST form, roles admin/staff. /users is admin-only (staff receive 403)."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "admin",
+          "password": "Admin123!"
+        },
+        {
+          "role": "staff",
+          "username": "staff",
+          "password": "Staff123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/login",
+          "/healthz"
+        ],
+        "authenticated": [
+          "/",
+          "/products",
+          "/products/new",
+          "/products/{id}/edit",
+          "/orders",
+          "/orders/{id}"
+        ],
+        "admin": [
+          "/users"
+        ]
+      },
+      "persistence": "sqlite file at data/bakkal.sqlite (Docker volume /var/www/html/data), auto-created + seeded with 2 users, 10 products, 6 orders on first request",
+      "notes": "No Composer, no build step. Docker image runs Apache on 8006 with DocumentRoot=public and mod_rewrite; mount a volume at /var/www/html/data to keep the database. Apache must be able to write to data/ (owned by www-data in the image). For a non-Docker deployment the web server must route all requests to public/index.php."
+    },
+    {
+      "name": "laravel-crm",
+      "folder": "07-laravel-crm",
+      "title": "Halka CRM - contacts & deals pipeline",
+      "description": "Laravel 13 CRM with a contacts directory and a deals pipeline (lead/qualified/won/lost), Blade views styled with Tailwind from a CDN, SQLite storage and a hand-written session login with an admin-only user area.",
+      "kind": "fullstack",
+      "stack": [
+        "php",
+        "laravel",
+        "blade",
+        "sqlite",
+        "tailwind-cdn"
+      ],
+      "runtime": "php@8.3",
+      "port": 8007,
+      "extra_ports": [],
+      "install": "composer install --no-dev --optimize-autoloader",
+      "build": null,
+      "start": "php artisan migrate --force --seed && php artisan serve --host=0.0.0.0 --port=8007 --no-reload",
+      "dev": "php artisan serve --port=8007",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/healthz",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "APP_KEY",
+          "required": false,
+          "default": null,
+          "description": "Laravel encryption key (base64:...). If empty the Docker entrypoint generates a temporary one, so sessions reset on every restart; set it for stable sessions (`php artisan key:generate --show`)."
+        },
+        {
+          "name": "APP_ENV",
+          "required": false,
+          "default": "production",
+          "description": "Laravel environment name."
+        },
+        {
+          "name": "APP_DEBUG",
+          "required": false,
+          "default": "false",
+          "description": "Show stack traces on errors."
+        },
+        {
+          "name": "APP_URL",
+          "required": false,
+          "default": "http://localhost:8007",
+          "description": "Public base URL used for generated links."
+        },
+        {
+          "name": "DB_CONNECTION",
+          "required": false,
+          "default": "sqlite",
+          "description": "Database driver; the demo only ships SQLite."
+        },
+        {
+          "name": "DB_DATABASE",
+          "required": false,
+          "default": "/data/database.sqlite (image) / database/database.sqlite (local)",
+          "description": "Path of the SQLite file; created by the entrypoint if missing."
+        },
+        {
+          "name": "SESSION_DRIVER",
+          "required": false,
+          "default": "file",
+          "description": "Session store (file or database)."
+        },
+        {
+          "name": "PHP_CLI_SERVER_WORKERS",
+          "required": false,
+          "default": "4",
+          "description": "Worker processes for the PHP built-in server behind `artisan serve`."
+        }
+      ],
+      "auth": {
+        "model": "server-session",
+        "description": "Laravel session guard driven by a hand-written LoginController (Auth::attempt), `auth` middleware for the app, and a custom EnsureUserIsAdmin middleware (alias `admin`) protecting /admin/*. CSRF via the framework's _token field."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "admin@halka.dev",
+          "password": "Admin123!"
+        },
+        {
+          "role": "rep",
+          "username": "rep@halka.dev",
+          "password": "Rep123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/",
+          "/login",
+          "/healthz",
+          "/up"
+        ],
+        "authenticated": [
+          "/dashboard",
+          "/contacts",
+          "/contacts/{id}",
+          "/deals",
+          "/deals/{id}"
+        ],
+        "admin": [
+          "/admin/users"
+        ]
+      },
+      "persistence": "sqlite file (image default /data/database.sqlite on the /data volume; local default database/database.sqlite). Entrypoint runs migrate --force --seed on every start; the seeder is idempotent (skips when a user exists) and creates 2 users, 20 contacts, 15 deals.",
+      "notes": "Runs `php artisan serve` inside php:8.3-cli as root (fine for a demo; put a reverse proxy in front for TLS). No Node/Vite build step - Tailwind comes from a CDN. Mount a volume at /data to persist the database. Provide APP_KEY to keep sessions valid across restarts. First start takes ~5-10 s (migrate + optimize)."
+    },
+    {
+      "name": "wordpress-docker",
+      "folder": "08-wordpress-docker",
+      "title": "Çınar Mimarlık — WordPress studio site",
+      "description": "Stock WordPress 6 (official images) with a bind-mounted custom theme and mu-plugin providing a 'project' custom post type; provisioned idempotently by setup.sh via a wp-cli sidecar.",
+      "kind": "cms",
+      "stack": [
+        "docker",
+        "wordpress",
+        "php",
+        "mariadb",
+        "wp-cli"
+      ],
+      "runtime": "docker",
+      "port": 8008,
+      "extra_ports": [],
+      "install": null,
+      "build": null,
+      "start": "docker compose up -d && ./setup.sh",
+      "dev": null,
+      "docker": {
+        "compose": "docker-compose.yml"
+      },
+      "healthcheck": {
+        "path": "/wp-json/cinar/v1/health",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "WORDPRESS_DB_NAME",
+          "required": false,
+          "default": "cinar",
+          "description": "MariaDB database name"
+        },
+        {
+          "name": "WORDPRESS_DB_USER",
+          "required": false,
+          "default": "cinar",
+          "description": "MariaDB user"
+        },
+        {
+          "name": "WORDPRESS_DB_PASSWORD",
+          "required": false,
+          "default": "change-me-demo-db-pass",
+          "description": "MariaDB password (demo value)"
+        },
+        {
+          "name": "MARIADB_ROOT_PASSWORD",
+          "required": false,
+          "default": "change-me-demo-root-pass",
+          "description": "MariaDB root password (demo value)"
+        },
+        {
+          "name": "WORDPRESS_TABLE_PREFIX",
+          "required": false,
+          "default": "wp_",
+          "description": "Table prefix"
+        },
+        {
+          "name": "WP_HOME",
+          "required": false,
+          "default": "http://localhost:8008",
+          "description": "Public site URL; change to the deployed domain"
+        },
+        {
+          "name": "WP_SITEURL",
+          "required": false,
+          "default": "http://localhost:8008",
+          "description": "WordPress core URL; same as WP_HOME"
+        },
+        {
+          "name": "WORDPRESS_CONFIG_EXTRA",
+          "required": false,
+          "default": "define('WP_HOME', getenv('WP_HOME') ?: 'http://localhost:8008'); define('WP_SITEURL', getenv('WP_SITEURL') ?: 'http://localhost:8008');",
+          "description": "PHP appended to wp-config.php; keep the default"
+        },
+        {
+          "name": "WP_ADMIN_USER",
+          "required": false,
+          "default": "admin",
+          "description": "Admin user created by setup.sh on first install"
+        },
+        {
+          "name": "WP_ADMIN_PASSWORD",
+          "required": false,
+          "default": "Admin123!",
+          "description": "Admin password created by setup.sh on first install"
+        },
+        {
+          "name": "WP_ADMIN_EMAIL",
+          "required": false,
+          "default": "admin@cinar.local",
+          "description": "Admin e-mail created by setup.sh on first install"
+        }
+      ],
+      "auth": {
+        "model": "cms-admin",
+        "description": "WordPress native login (/wp-login.php) with auth cookies; /wp-admin/ redirects anonymous users to the login form. Public site and REST read endpoints need no auth."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "admin",
+          "password": "Admin123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/",
+          "/projeler/",
+          "/projeler/kordon-konutlari/",
+          "/proje-turu/konut/",
+          "/hakkimizda/",
+          "/iletisim/",
+          "/wp-json/cinar/v1/health",
+          "/wp-json/wp/v2/project",
+          "/wp-login.php"
+        ],
+        "authenticated": [],
+        "admin": [
+          "/wp-admin/"
+        ]
+      },
+      "persistence": "Named volumes: db_data (MariaDB), wp_core (/var/www/html incl. wp-config.php), wp_content (uploads/plugins). Theme and mu-plugin are bind-mounted from the repo. Content is created by setup.sh into the database.",
+      "notes": "Docker-only. After `docker compose up -d` you MUST run ./setup.sh once (idempotent, ~1-2 min) – it waits for MariaDB, runs `wp core install`, activates the theme and seeds pages/projects/menu via the wpcli sidecar (compose profile 'cli', never started by `up`). Until then the health route redirects to the install wizard. To serve from another domain set WP_HOME and WP_SITEURL in .env before running setup.sh (or afterwards – constants override DB values). Only port 8008 is published; MariaDB is internal. XML-RPC is disabled. The wpcli service runs as uid 33 to match the Apache image."
+    },
+    {
+      "name": "strapi-headless-cms",
+      "folder": "09-strapi-headless-cms",
+      "title": "Tarla Journal — Strapi 5 headless CMS + static frontend",
+      "description": "Strapi 5 (TypeScript, SQLite) exposing articles/categories/authors over a public REST API, with public permissions and seed content created programmatically on first boot, plus a build-free static HTML/JS frontend served by nginx.",
+      "kind": "cms",
+      "stack": [
+        "node",
+        "strapi",
+        "typescript",
+        "sqlite",
+        "nginx",
+        "docker"
+      ],
+      "runtime": "node@22",
+      "port": 1337,
+      "extra_ports": [
+        8009
+      ],
+      "install": "cd cms && npm ci",
+      "build": "cd cms && npm run build",
+      "start": "cd cms && npm run start",
+      "dev": "cd cms && npm run develop",
+      "docker": {
+        "compose": "docker-compose.yml"
+      },
+      "healthcheck": {
+        "path": "/_health",
+        "expect_status": 204
+      },
+      "env": [
+        {
+          "name": "APP_KEYS",
+          "required": true,
+          "default": "demo-app-key-one,demo-app-key-two,demo-app-key-three,demo-app-key-four",
+          "description": "Comma-separated session keys (demo values in cms/.env.example; generate with openssl rand -base64 32)"
+        },
+        {
+          "name": "API_TOKEN_SALT",
+          "required": true,
+          "default": "demo-api-token-salt",
+          "description": "Salt for API tokens"
+        },
+        {
+          "name": "ADMIN_JWT_SECRET",
+          "required": true,
+          "default": "demo-admin-jwt-secret",
+          "description": "Admin panel JWT secret"
+        },
+        {
+          "name": "TRANSFER_TOKEN_SALT",
+          "required": true,
+          "default": "demo-transfer-token-salt",
+          "description": "Salt for transfer tokens"
+        },
+        {
+          "name": "JWT_SECRET",
+          "required": true,
+          "default": "demo-jwt-secret",
+          "description": "users-permissions JWT secret"
+        },
+        {
+          "name": "ENCRYPTION_KEY",
+          "required": true,
+          "default": "demo-encryption-key-change-me",
+          "description": "Key for encrypted settings"
+        },
+        {
+          "name": "HOST",
+          "required": false,
+          "default": "0.0.0.0",
+          "description": "Bind address"
+        },
+        {
+          "name": "PORT",
+          "required": false,
+          "default": "1337",
+          "description": "HTTP port"
+        },
+        {
+          "name": "DATABASE_CLIENT",
+          "required": false,
+          "default": "sqlite",
+          "description": "sqlite | postgres | mysql"
+        },
+        {
+          "name": "DATABASE_FILENAME",
+          "required": false,
+          "default": ".tmp/data.db",
+          "description": "SQLite file, relative to cms/"
+        },
+        {
+          "name": "CORS_ORIGIN",
+          "required": false,
+          "default": "*",
+          "description": "Comma-separated browser origins allowed to call the API"
+        }
+      ],
+      "auth": {
+        "model": "cms-admin",
+        "description": "Strapi admin panel (/admin) with JWT login via POST /admin/login. Public REST reads (find/findOne on article, category, author) are granted to the anonymous public role at boot; writes require an admin session or API token."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "admin@tarla.dev",
+          "password": "Admin123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/_health",
+          "/api/articles?populate=*",
+          "/api/categories",
+          "/api/authors",
+          "/admin/login"
+        ],
+        "authenticated": [
+          "/api/upload/files"
+        ],
+        "admin": [
+          "/admin"
+        ]
+      },
+      "persistence": "SQLite at cms/.tmp/data.db (Docker volume cms_data at /opt/app/.tmp) auto-created and seeded on first boot; uploads in cms/public/uploads (Docker volume cms_uploads).",
+      "notes": "Two services: Strapi on 1337 (main) and the static frontend on 8009 (nginx, `frontend/` dir; locally any static server works). The admin user is NOT created automatically: after the first start run scripts/create-admin.sh (local) or scripts/create-admin.sh --docker (compose), or complete the form shown on the first visit to /admin. Health endpoint /_health returns 204 (not 200). The CMS Docker build compiles better-sqlite3 on alpine and takes several minutes. If the frontend is not served from localhost, set window.API_URL in frontend/config.js to the public CMS URL and set CORS_ORIGIN accordingly. Demo secrets are provided as compose fallbacks; override via cms/.env for real deployments."
+    },
+    {
+      "name": "ghost-docker",
+      "folder": "10-ghost-docker",
+      "title": "Sığınak — Ghost 5 newsletter",
+      "description": "Stock Ghost 5 + MySQL 8 on Docker with a bind-mounted custom Handlebars theme and routes.yaml (/newsletter/ channel, /archive/); owner account, theme activation and sample content are provisioned through the Admin API by an idempotent script.",
+      "kind": "cms",
+      "stack": [
+        "docker",
+        "ghost",
+        "node",
+        "handlebars",
+        "mysql"
+      ],
+      "runtime": "docker",
+      "port": 8010,
+      "extra_ports": [],
+      "install": null,
+      "build": null,
+      "start": "docker compose up -d && scripts/setup-owner.sh",
+      "dev": null,
+      "docker": {
+        "compose": "docker-compose.yml"
+      },
+      "healthcheck": {
+        "path": "/ghost/api/admin/site/",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "GHOST_URL",
+          "required": false,
+          "default": "http://localhost:8010",
+          "description": "Public URL of the site; change to the deployed domain"
+        },
+        {
+          "name": "MYSQL_ROOT_PASSWORD",
+          "required": false,
+          "default": "change-me-demo-root",
+          "description": "MySQL root password (demo)"
+        },
+        {
+          "name": "MYSQL_DATABASE",
+          "required": false,
+          "default": "ghost",
+          "description": "Database name"
+        },
+        {
+          "name": "MYSQL_USER",
+          "required": false,
+          "default": "ghost",
+          "description": "Database user"
+        },
+        {
+          "name": "MYSQL_PASSWORD",
+          "required": false,
+          "default": "change-me-demo-ghost",
+          "description": "Database password (demo)"
+        },
+        {
+          "name": "MAIL_TRANSPORT",
+          "required": false,
+          "default": "Direct",
+          "description": "Ghost mail transport; SMTP + mail__options__* for real mail"
+        },
+        {
+          "name": "STAFF_DEVICE_VERIFICATION",
+          "required": false,
+          "default": "false",
+          "description": "Keep false without SMTP or admin logins fail (Ghost e-mails a device code)"
+        },
+        {
+          "name": "GHOST_OWNER_NAME",
+          "required": false,
+          "default": "Sığınak Editörü",
+          "description": "Owner name created by setup-owner.sh"
+        },
+        {
+          "name": "GHOST_OWNER_EMAIL",
+          "required": false,
+          "default": "owner@siginak.dev",
+          "description": "Owner login e-mail created by setup-owner.sh"
+        },
+        {
+          "name": "GHOST_OWNER_PASSWORD",
+          "required": false,
+          "default": "Owner123!!",
+          "description": "Owner password (min 10 chars) created by setup-owner.sh"
+        }
+      ],
+      "auth": {
+        "model": "cms-admin",
+        "description": "Ghost admin session: POST /ghost/api/admin/session/ (JSON username/password + Origin header) sets a cookie used by /ghost/ and the Admin API; Admin API returns 403 without it. Public site, RSS and /ghost/api/admin/site/ are anonymous."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "owner@siginak.dev",
+          "password": "Owner123!!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/",
+          "/newsletter/",
+          "/archive/",
+          "/hakkinda/",
+          "/sayi-1-yavaslamanin-haritasi/",
+          "/tag/newsletter/",
+          "/author/siginak/",
+          "/rss/",
+          "/ghost/api/admin/site/"
+        ],
+        "authenticated": [
+          "/ghost/api/admin/posts/"
+        ],
+        "admin": [
+          "/ghost/"
+        ]
+      },
+      "persistence": "Named volumes db_data (MySQL) and ghost_content (/var/lib/ghost/content: images, files, logs). Theme (content/themes/siginak) and content/settings/routes.yaml are bind-mounted from the repo. Owner, settings, page and posts are created by scripts/setup-owner.sh when missing.",
+      "notes": "Docker-only. After `docker compose up -d`, wait for GET /ghost/api/admin/site/ = 200 (Ghost needs ~20 s to create its MySQL schema on first boot) and run scripts/setup-owner.sh once (idempotent; needs curl + python3 on the host). Without it the site is up but /ghost/ shows Ghost's setup wizard and the default Casper theme is active. Only port 8010 is published; MySQL is internal. No SMTP is configured, so member e-mails/newsletters are not sent; STAFF_DEVICE_VERIFICATION must stay false unless SMTP is configured. GHOST_URL must equal the externally visible URL or Ghost will generate wrong links/redirects."
+    },
+    {
+      "name": "directus-docker",
+      "folder": "11-directus-docker",
+      "title": "Kılavuz Etkinlik — Directus 11 events directory",
+      "description": "Directus 11 + Postgres 16 with an events/categories data model built via the REST API by an idempotent bootstrap script and versioned as a schema snapshot; public-policy read access for published events; static nginx frontend with city filter.",
+      "kind": "cms",
+      "stack": [
+        "docker",
+        "directus",
+        "node",
+        "postgres",
+        "nginx"
+      ],
+      "runtime": "docker",
+      "port": 8011,
+      "extra_ports": [
+        8111
+      ],
+      "install": null,
+      "build": null,
+      "start": "docker compose up -d && scripts/bootstrap.sh",
+      "dev": null,
+      "docker": {
+        "compose": "docker-compose.yml"
+      },
+      "healthcheck": {
+        "path": "/server/health",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "DIRECTUS_KEY",
+          "required": false,
+          "default": "change-me-demo-key",
+          "description": "Directus KEY"
+        },
+        {
+          "name": "DIRECTUS_SECRET",
+          "required": false,
+          "default": "change-me-demo-secret-please-rotate-me",
+          "description": "Directus SECRET (token signing) – rotate for real use"
+        },
+        {
+          "name": "ADMIN_EMAIL",
+          "required": false,
+          "default": "admin@kilavuz.dev",
+          "description": "First admin user, created by Directus on first boot"
+        },
+        {
+          "name": "ADMIN_PASSWORD",
+          "required": false,
+          "default": "Admin123!",
+          "description": "First admin password (first boot only)"
+        },
+        {
+          "name": "POSTGRES_USER",
+          "required": false,
+          "default": "directus",
+          "description": "Database user"
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "required": false,
+          "default": "change-me-demo-db",
+          "description": "Database password (demo)"
+        },
+        {
+          "name": "POSTGRES_DB",
+          "required": false,
+          "default": "directus",
+          "description": "Database name"
+        },
+        {
+          "name": "PUBLIC_URL",
+          "required": false,
+          "default": "http://localhost:8011",
+          "description": "Public URL of the Directus API/admin"
+        },
+        {
+          "name": "CORS_ORIGIN",
+          "required": false,
+          "default": "*",
+          "description": "Allowed browser origins"
+        }
+      ],
+      "auth": {
+        "model": "cms-admin",
+        "description": "Directus admin (e-mail/password → JWT via POST /auth/login; admin SPA at /admin). Anonymous requests use the built-in Public policy, which the bootstrap script grants read on categories and on events where status = published; writes and system collections return 403."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "admin@kilavuz.dev",
+          "password": "Admin123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/server/health",
+          "/items/events?filter[status][_eq]=published&fields=*,category.name",
+          "/items/categories",
+          "/auth/login"
+        ],
+        "authenticated": [
+          "/items/directus_users",
+          "/collections",
+          "/permissions"
+        ],
+        "admin": [
+          "/admin"
+        ]
+      },
+      "persistence": "Named volumes db_data (Postgres), directus_uploads, directus_extensions. Data model versioned in snapshot/schema.yaml (bind-mounted at /directus/snapshot). Seed data inserted by scripts/bootstrap.sh when collections are empty.",
+      "notes": "Docker-only. After `docker compose up -d` wait for GET /server/health = 200 (Directus creates its system tables and the admin user from ADMIN_EMAIL/ADMIN_PASSWORD on first boot), then run scripts/bootstrap.sh once (idempotent; needs python3 on the host; honours DIRECTUS_URL). Alternative: `docker compose exec directus npx directus schema apply --yes /directus/snapshot/schema.yaml` first, then bootstrap.sh for permissions + seed. Frontend on 8111 is plain files from ./frontend served by nginx; if not on localhost, edit frontend/config.js (window.API_URL) and set PUBLIC_URL/CORS_ORIGIN. Postgres is internal only. Health returns 200 JSON."
+    },
+    {
+      "name": "sveltekit-shop",
+      "folder": "12-sveltekit-shop",
+      "title": "Terracotta Supply – plant-pot shop (SvelteKit 2 + Svelte 5)",
+      "description": "Fictional plant-pot e-commerce site: product catalogue, cookie-stored cart, checkout that writes orders to a JSON store, customer account area and an admin product CRUD, all built on SvelteKit form actions with a server-side cookie session resolved in hooks.server.ts.",
+      "kind": "ssr",
+      "stack": [
+        "node",
+        "sveltekit",
+        "svelte",
+        "typescript",
+        "vite",
+        "adapter-node",
+        "bcryptjs"
+      ],
+      "runtime": "node@22",
+      "port": 3012,
+      "extra_ports": [],
+      "install": "npm ci",
+      "build": "npm run build",
+      "start": "npm start",
+      "dev": "npm run dev",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/healthz",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "ORIGIN",
+          "required": false,
+          "default": "http://localhost:3012",
+          "description": "Public origin of the site (scheme://host[:port]) as browsers see it. SvelteKit rejects form-action POSTs whose Origin header differs from it (403), so set it to the real public URL (e.g. https://shop.example.com) for anything other than localhost access. `npm start`/the image default it to http://localhost:3012 with a warning."
+        },
+        {
+          "name": "PORT",
+          "required": false,
+          "default": "3012",
+          "description": "HTTP port of the adapter-node server."
+        },
+        {
+          "name": "HOST",
+          "required": false,
+          "default": "0.0.0.0",
+          "description": "Bind address."
+        },
+        {
+          "name": "COOKIE_SECURE",
+          "required": false,
+          "default": "false",
+          "description": "Set \"true\" behind HTTPS so session/cart cookies get the Secure flag (keep false for plain-HTTP smoke tests)."
+        },
+        {
+          "name": "DATA_DIR",
+          "required": false,
+          "default": "./data (Docker: /app/data)",
+          "description": "Directory holding users.json, sessions.json, products.json and orders.json (auto-created and seeded on first request)."
+        }
+      ],
+      "auth": {
+        "model": "server-session",
+        "description": "Cookie `tc_session` holds an opaque id looked up in a server-side Map (persisted to data/sessions.json, 7-day TTL) by hooks.server.ts, which sets event.locals.user. Login/register/logout are SvelteKit form actions (POST /login?/login, /register?/register, /logout). Route-group layouts enforce access: (account) redirects anonymous users 303 to /login?next=..., (admin) additionally requires role admin (403 otherwise). Passwords are bcryptjs hashes."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "owner@terracotta.shop",
+          "password": "Owner123!"
+        },
+        {
+          "role": "customer",
+          "username": "shopper@terracotta.shop",
+          "password": "Shop123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/",
+          "/products",
+          "/products/[slug]",
+          "/cart",
+          "/login",
+          "/register",
+          "/logout",
+          "/healthz"
+        ],
+        "authenticated": [
+          "/account",
+          "/account/orders",
+          "POST /cart?/checkout"
+        ],
+        "admin": [
+          "/admin",
+          "/admin/products"
+        ]
+      },
+      "persistence": "JSON files in data/ (DATA_DIR): users.json, products.json (10 seeded pots), orders.json, sessions.json - created and seeded on first request, rewritten atomically on change. The cart lives client-side in the `tc_cart` cookie.",
+      "notes": "Needs a writable DATA_DIR (Docker: mount a volume at /app/data). Set ORIGIN to the public URL or every form submission (login included) fails with 403 'Cross-site POST form submissions are forbidden'. For curl smoke tests send `Origin: http://localhost:3012` and `Accept: text/html` on action POSTs: e.g. `curl -c jar -H 'Origin: http://localhost:3012' -H 'Accept: text/html' -X POST 'http://localhost:3012/login?/login' -d 'email=shopper@terracotta.shop&password=Shop123!'` -> 303, then `curl -b jar http://localhost:3012/account` -> 200 (without the cookie: 303 to /login). Without `Accept: text/html` SvelteKit answers action POSTs with 200 + JSON ({\"type\":\"redirect\"|\"failure\",...}). Actions without fields (checkout, logout) still need a form-encoded body (`-d ''`), otherwise 415. `npm audit` lists 3 low advisories in transitive dev tooling only."
+    },
+    {
+      "name": "nuxt-content-portfolio",
+      "folder": "13-nuxt-content-portfolio",
+      "title": "Mara Yılmaz — Product Designer portfolio & blog",
+      "description": "Personal portfolio and blog driven entirely by markdown in content/ via @nuxt/content v3. Fully static: `nuxt generate` writes .output/public which any static host or the included nginx image can serve.",
+      "kind": "static",
+      "stack": [
+        "node",
+        "nuxt",
+        "nuxt-content",
+        "vue",
+        "typescript",
+        "nginx"
+      ],
+      "runtime": "node@22",
+      "port": 3013,
+      "extra_ports": [],
+      "install": "npm ci",
+      "build": "npm run generate",
+      "start": "npx serve .output/public -l 3013",
+      "dev": "npm run dev",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/",
+        "expect_status": 200
+      },
+      "env": [],
+      "auth": {
+        "model": "none",
+        "description": "Public portfolio; no authentication."
+      },
+      "credentials": [],
+      "routes": {
+        "public": [
+          "/",
+          "/work",
+          "/work/:slug",
+          "/blog",
+          "/blog?tag=:tag",
+          "/blog/:slug",
+          "/about",
+          "/rss.xml",
+          "/not-found",
+          "/404.html"
+        ],
+        "authenticated": [],
+        "admin": []
+      },
+      "persistence": "none at runtime; content is markdown in content/ compiled into a SQLite dump at build time (Node's built-in node:sqlite, no native addon)",
+      "notes": "`npm run generate` = `nuxt generate && node scripts/postgenerate.mjs` (copies the pre-rendered /not-found page over 404.html). Static output only — serve .output/public. Do NOT use an SPA fallback to index.html; every route is a real HTML file and unknown paths should return the pre-rendered 404.html. Build needs Node >= 22.12 (uses node:sqlite). The RSS feed is a pre-rendered nitro route, so /rss.xml exists as a file in the output. `serve` is a devDependency, so run `npm ci` (not `--omit=dev`) before `npm start`-style preview, or use the nginx Dockerfile."
+    },
+    {
+      "name": "astro-starlight-docs",
+      "folder": "14-astro-starlight-docs",
+      "title": "Kestrel CLI — developer documentation",
+      "description": "Documentation site for a fictional preview-environment CLI, built with Astro 5 and the Starlight docs theme. Static output in dist/ with a client-side Pagefind search index and a splash landing page.",
+      "kind": "static",
+      "stack": [
+        "node",
+        "astro",
+        "starlight",
+        "typescript",
+        "pagefind",
+        "nginx"
+      ],
+      "runtime": "node@22",
+      "port": 4314,
+      "extra_ports": [],
+      "install": "npm ci",
+      "build": "npm run build",
+      "start": "npm run preview -- --port 4314 --host",
+      "dev": "npm run dev",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/",
+        "expect_status": 200
+      },
+      "env": [],
+      "auth": {
+        "model": "none",
+        "description": "Public documentation; no authentication."
+      },
+      "credentials": [],
+      "routes": {
+        "public": [
+          "/",
+          "/getting-started/",
+          "/installation/",
+          "/configuration/",
+          "/reference/cli/",
+          "/guides/preview-environments/",
+          "/guides/ci-integration/",
+          "/guides/secrets-management/",
+          "/changelog/",
+          "/404.html",
+          "/sitemap-index.xml"
+        ],
+        "authenticated": [],
+        "admin": []
+      },
+      "persistence": "none (static site; search index is static JSON/WASM under dist/pagefind/)",
+      "notes": "Serve dist/ as static files. Routes are directories with index.html (trailing slash); no SPA fallback — unknown paths should return 404.html. The /pagefind/ directory must be served (it is generated only by `npm run build`, not by `astro dev`). Node >= 18.20.8; built with Node 22."
+    },
+    {
+      "name": "fastapi-react-tasks",
+      "folder": "15-fastapi-react-tasks",
+      "title": "Orbit Tasks - FastAPI API + React SPA monorepo (two services)",
+      "description": "A team task board split into two deployable services: a FastAPI + SQLAlchemy + SQLite JSON API using the OAuth2 password flow (form-urlencoded /auth/token, Bearer JWT), and a React 19 + Vite + React Router 7 SPA served by nginx that proxies /api/ to the API container.",
+      "kind": "compose",
+      "stack": [
+        "python",
+        "fastapi",
+        "sqlalchemy",
+        "sqlite",
+        "uvicorn",
+        "node",
+        "react",
+        "vite",
+        "typescript",
+        "react-router",
+        "tailwind",
+        "nginx",
+        "docker-compose"
+      ],
+      "runtime": "docker",
+      "port": 5015,
+      "extra_ports": [
+        8015
+      ],
+      "install": null,
+      "build": "docker compose build",
+      "start": "docker compose up -d",
+      "dev": "cd api && uvicorn app.main:app --port 8015 --reload  # and in another shell: cd web && npm run dev",
+      "docker": {
+        "compose": "docker-compose.yml"
+      },
+      "healthcheck": {
+        "path": "/healthz",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "JWT_SECRET",
+          "required": true,
+          "default": "change-me-demo-orbit-jwt-secret",
+          "description": "HS256 secret for the API's access tokens (compose passes it to the api service)."
+        },
+        {
+          "name": "ACCESS_TOKEN_MINUTES",
+          "required": false,
+          "default": "60",
+          "description": "Access token lifetime (api)."
+        },
+        {
+          "name": "CORS_ORIGINS",
+          "required": false,
+          "default": "http://localhost:5015,http://127.0.0.1:5015",
+          "description": "Comma-separated browser origins allowed by the API. Not needed when the SPA talks to the API through the nginx /api proxy (same origin)."
+        },
+        {
+          "name": "DATABASE_URL",
+          "required": false,
+          "default": "sqlite:///./data/orbit.db",
+          "description": "SQLAlchemy URL for the api service; compose sets sqlite:////app/data/orbit.db on the named volume."
+        },
+        {
+          "name": "AUTO_SEED",
+          "required": false,
+          "default": "1",
+          "description": "Seed demo users/projects/tasks at API startup when the users table is empty."
+        },
+        {
+          "name": "VITE_API_URL",
+          "required": false,
+          "default": "/api",
+          "description": "Docker build ARG for the web image (baked into the bundle). Defaults to /api in compose so the SPA uses the nginx proxy; set http://localhost:8015 for a local Vite dev server."
+        }
+      ],
+      "auth": {
+        "model": "bearer-jwt",
+        "description": "OAuth2 password flow: POST application/x-www-form-urlencoded username+password to /auth/token (via the SPA at /api/auth/token) -> {access_token, token_type: bearer, expires_in}. The SPA keeps the token in memory + localStorage and sends Authorization: Bearer on every call; /admin/* requires role=admin (403 otherwise, enforced server-side and mirrored by a client-side 403 page). Deactivated users are rejected with 403."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "admin@orbit.dev",
+          "password": "Admin123!"
+        },
+        {
+          "role": "member",
+          "username": "dev@orbit.dev",
+          "password": "Dev123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/ (SPA, redirects to /login when signed out)",
+          "/login",
+          "/healthz (nginx)",
+          "/api/healthz",
+          "/api/docs",
+          "/api/auth/token",
+          ":8015/healthz",
+          ":8015/docs"
+        ],
+        "authenticated": [
+          "/ (board)",
+          "/projects/:id",
+          "/api/auth/me",
+          "/api/tasks",
+          "/api/tasks/{id}",
+          "/api/projects",
+          "/api/projects/{id}"
+        ],
+        "admin": [
+          "/admin (SPA page)",
+          "/api/admin/users",
+          "/api/admin/users/{id}/toggle-active"
+        ]
+      },
+      "persistence": "SQLite file inside the api container at /app/data/orbit.db on the named volume orbit-api-data (created and seeded automatically at API startup). The web service is stateless static files.",
+      "notes": "services: api (FastAPI/uvicorn, container port 8015, published 8015, healthcheck /healthz) and web (nginx:1.27-alpine serving the built SPA, container port 5015, published 5015, depends_on api healthy). The web container's nginx.conf proxies /api/ -> http://api:8015/ (prefix stripped) and provides history-API fallback to index.html, so only port 5015 needs to be exposed publicly; 8015 is optional for direct API access/Swagger. VITE_API_URL is a BUILD-TIME arg for the web image - rebuild the web image to change it. Local (non-Docker) run needs two processes: uvicorn on 8015 and Vite on 5015 with VITE_API_URL=http://localhost:8015 and CORS_ORIGINS including http://localhost:5015."
+    },
+    {
+      "name": "go-gin-url-shortener",
+      "folder": "16-go-gin-url-shortener",
+      "title": "Kısa.link – URL Shortener",
+      "description": "A Go/Gin URL shortener with click statistics, a JSON API and an HTTP Basic Auth protected admin panel, persisted in a pure-Go SQLite database and compiled into a single static binary.",
+      "kind": "fullstack",
+      "stack": [
+        "go",
+        "gin",
+        "sqlite",
+        "html-template",
+        "tailwind"
+      ],
+      "runtime": "go@1.25",
+      "port": 8016,
+      "extra_ports": [],
+      "install": "go mod download",
+      "build": "CGO_ENABLED=0 go build -trimpath -ldflags=\"-s -w\" -o bin/kisa ./cmd/server",
+      "start": "./bin/kisa",
+      "dev": "go run ./cmd/server",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/healthz",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "PORT",
+          "required": false,
+          "default": "8016",
+          "description": "HTTP port to listen on"
+        },
+        {
+          "name": "BASE_URL",
+          "required": false,
+          "default": "http://localhost:8016",
+          "description": "Public base URL used to build short links (set to the deployed origin, no trailing slash)"
+        },
+        {
+          "name": "ADMIN_USER",
+          "required": false,
+          "default": "admin",
+          "description": "HTTP Basic Auth username for /admin"
+        },
+        {
+          "name": "ADMIN_PASS",
+          "required": false,
+          "default": "Admin123!",
+          "description": "HTTP Basic Auth password for /admin (demo value; override in real deployments)"
+        },
+        {
+          "name": "DB_PATH",
+          "required": false,
+          "default": "data/kisa.db",
+          "description": "SQLite database file path; directory is created if missing (Docker image sets /data/kisa.db)"
+        },
+        {
+          "name": "GIN_MODE",
+          "required": false,
+          "default": "debug",
+          "description": "Gin mode: debug | release | test (Docker image sets release)"
+        }
+      ],
+      "auth": {
+        "model": "http-basic",
+        "description": "Public shortening, redirect, stats and JSON API. The /admin area is protected by HTTP Basic Auth (gin.BasicAuth) with credentials from ADMIN_USER / ADMIN_PASS; unauthenticated requests get 401 with a WWW-Authenticate header."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "admin",
+          "password": "Admin123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/",
+          "/shorten",
+          "/:code",
+          "/:code/stats",
+          "/api/links/:code",
+          "/healthz",
+          "/static/*"
+        ],
+        "authenticated": [],
+        "admin": [
+          "/admin",
+          "/admin/links/:code/delete",
+          "/admin/export.csv"
+        ]
+      },
+      "persistence": "sqlite file at data/kisa.db (WAL mode; /data/kisa.db inside the container) – schema migrated and 5 demo links seeded on first start",
+      "notes": "Single static binary, no CGO needed. go.mod requires go >= 1.25 (Go toolchains >= 1.21 auto-download it). Container runs as uid 65532 (distroless nonroot): a named volume mounted at /data works out of the box, but a host bind-mount directory must be writable by uid 65532 (chown 65532:65532 ./data). Set BASE_URL to the externally visible origin so generated short links are correct."
+    },
+    {
+      "name": "spring-boot-library",
+      "folder": "17-spring-boot-library",
+      "title": "Kütüphane Plus – Library Lending System",
+      "description": "A Spring Boot 3 library lending system with a public catalogue, member borrowing/returns and a librarian admin area, using Spring Security form login with server-side sessions and CSRF, Thymeleaf views and a file-based H2 database.",
+      "kind": "ssr",
+      "stack": [
+        "java",
+        "spring-boot",
+        "spring-security",
+        "thymeleaf",
+        "spring-data-jpa",
+        "h2",
+        "maven"
+      ],
+      "runtime": "java@21",
+      "port": 8017,
+      "extra_ports": [],
+      "install": "./mvnw -B -q dependency:go-offline",
+      "build": "./mvnw -B -q package -DskipTests",
+      "start": "java -jar target/library.jar",
+      "dev": "./mvnw spring-boot:run",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/actuator/health",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "PORT",
+          "required": false,
+          "default": "8017",
+          "description": "HTTP port (server.port)"
+        },
+        {
+          "name": "DB_PATH",
+          "required": false,
+          "default": "./data/library",
+          "description": "H2 database file prefix without extension; H2 creates <DB_PATH>.mv.db (Docker image sets /app/data/library)"
+        },
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "required": false,
+          "default": "(none)",
+          "description": "Set to 'prod' to hide stack traces/messages in error pages (Docker image sets prod). H2 console is disabled in every profile."
+        },
+        {
+          "name": "JAVA_OPTS",
+          "required": false,
+          "default": "-XX:MaxRAMPercentage=75",
+          "description": "Extra JVM flags (Docker entrypoint only)"
+        }
+      ],
+      "auth": {
+        "model": "server-session",
+        "description": "Spring Security form login (POST /login with username/password/_csrf) backed by a BCrypt UserDetailsService over the members table; JSESSIONID cookie session, CSRF token required on every POST, roles ROLE_ADMIN and ROLE_MEMBER enforced by requestMatchers (/admin/** hasRole ADMIN, /my/** and /loans/** authenticated). 403 renders a custom page."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "librarian@kutuphane.dev",
+          "password": "Admin123!"
+        },
+        {
+          "role": "member",
+          "username": "uye@kutuphane.dev",
+          "password": "Uye123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/",
+          "/books/{id}",
+          "/login",
+          "/actuator/health",
+          "/css/**"
+        ],
+        "authenticated": [
+          "/my/loans",
+          "/books/{id}/borrow",
+          "/loans/{id}/return",
+          "/logout"
+        ],
+        "admin": [
+          "/admin/books",
+          "/admin/books/new",
+          "/admin/books/{id}/edit",
+          "/admin/loans",
+          "/admin/members"
+        ]
+      },
+      "persistence": "H2 file database at ./data/library.mv.db (DB_PATH; /app/data inside the container) – schema managed by Hibernate ddl-auto=update, seeded with 10 books, 2 users and 3 loans when the members table is empty",
+      "notes": "Java/Maven are not required on the host when using Docker (multi-stage build compiles inside maven:3.9-eclipse-temurin-21). Without Docker, JDK 21 is required and ./mvnw downloads Maven 3.9.16 on first use (needs network). First Maven build downloads ~120 MB of dependencies. Container runs as non-root user 'app'; mount a writable volume at /app/data. Startup takes ~8-20 s before /actuator/health returns 200, so give the healthcheck a start period."
+    },
+    {
+      "name": "dotnet-razor-helpdesk",
+      "folder": "18-dotnet-razor-helpdesk",
+      "title": "Masaüstü Destek – IT Helpdesk Ticketing",
+      "description": "An ASP.NET Core 10 Razor Pages helpdesk where requesters open and follow tickets and agents/admins triage them, using ASP.NET Core Identity cookie authentication with three roles, EF Core migrations on SQLite and folder-convention authorization.",
+      "kind": "ssr",
+      "stack": [
+        "dotnet",
+        "aspnet-core",
+        "razor-pages",
+        "identity",
+        "ef-core",
+        "sqlite"
+      ],
+      "runtime": "dotnet@10.0",
+      "port": 8018,
+      "extra_ports": [],
+      "install": "dotnet restore",
+      "build": "dotnet publish -c Release -o out /p:UseAppHost=false",
+      "start": "dotnet out/Helpdesk.dll",
+      "dev": "dotnet run",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/healthz",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "ASPNETCORE_URLS",
+          "required": false,
+          "default": "http://0.0.0.0:8018",
+          "description": "Listen address(es); the app falls back to 0.0.0.0:8018 when unset (Docker image sets http://+:8018)"
+        },
+        {
+          "name": "ASPNETCORE_ENVIRONMENT",
+          "required": false,
+          "default": "Production",
+          "description": "Development shows developer exception pages; Production uses the /Error page"
+        },
+        {
+          "name": "ConnectionStrings__Default",
+          "required": false,
+          "default": "Data Source=data/helpdesk.db",
+          "description": "SQLite connection string; the directory is created automatically and also holds the Data Protection keys (data/keys). Docker image sets Data Source=/app/data/helpdesk.db"
+        }
+      ],
+      "auth": {
+        "model": "server-session",
+        "description": "ASP.NET Core Identity with cookie authentication (cookie 'masaustu.auth', 8 h sliding). Custom Razor Pages for /Account/Login, /Account/Logout (POST only) and /Account/Register using SignInManager/UserManager – no scaffolded Identity UI. Roles Admin / Agent / Requester; /Admin folder protected by the AdminOnly policy convention (AuthorizeFolder) plus [Authorize(Roles=\"Admin\")] on /Admin/Users; /Tickets requires a signed-in user and requesters only see/open their own tickets; status changes and assignment are Agent/Admin only. Antiforgery tokens on every POST. Unauthenticated → 302 /Account/Login, forbidden → 302 /AccessDenied (renders with HTTP 403)."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "admin@masaustu.dev",
+          "password": "Admin123!"
+        },
+        {
+          "role": "agent",
+          "username": "agent@masaustu.dev",
+          "password": "Agent123!"
+        },
+        {
+          "role": "requester",
+          "username": "user@masaustu.dev",
+          "password": "User123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/",
+          "/Account/Login",
+          "/Account/Register",
+          "/AccessDenied",
+          "/Error",
+          "/healthz",
+          "/css/*"
+        ],
+        "authenticated": [
+          "/Tickets",
+          "/Tickets/Create",
+          "/Tickets/Details/{id}",
+          "/Account/Logout"
+        ],
+        "admin": [
+          "/Admin/Users",
+          "/Admin/Categories"
+        ]
+      },
+      "persistence": "SQLite file at data/helpdesk.db (WAL mode; /app/data/helpdesk.db in the container) created by EF Core migrations (Database.Migrate() at startup) and seeded with 3 roles, 3 users, 4 categories and 10 tickets when empty; Data Protection keys are stored in data/keys so cookies survive restarts",
+      "notes": "Requires the .NET 10 SDK to build (runtime image mcr.microsoft.com/dotnet/aspnet:10.0). Container runs as the non-root 'app' user (uid 1654); mount a writable volume at /app/data (named volume works out of the box, a bind mount must be writable by uid 1654). Run the app from a directory where wwwroot/ is available (publish output or project dir) – static CSS is served from wwwroot. Self-registration is open and creates Requester accounts."
+    },
+    {
+      "name": "vue-spa-kanban",
+      "folder": "19-vue-spa-kanban",
+      "title": "Flowboard — Vue 3 kanban SPA",
+      "description": "Client-only kanban board (Vue 3 + Vite 6 + Vue Router 4 history mode + Pinia + Tailwind 4) with mock login and role-guarded routes. Board and session live in localStorage; there is no backend at all.",
+      "kind": "spa",
+      "stack": [
+        "node",
+        "vue",
+        "vite",
+        "vue-router",
+        "pinia",
+        "tailwindcss",
+        "typescript",
+        "nginx"
+      ],
+      "runtime": "node@22",
+      "port": 8019,
+      "extra_ports": [
+        5019
+      ],
+      "install": "npm ci",
+      "build": "npm run build",
+      "start": "npm run preview",
+      "dev": "npm run dev",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/",
+        "expect_status": 200
+      },
+      "env": [],
+      "auth": {
+        "model": "client-mock",
+        "description": "Client-side only. Login compares against hard-coded users in src/mocks/users.ts and stores a fake token + user in localStorage['flowboard.auth']. Vue Router beforeEach guards enforce requiresAuth (/board, /settings) and requiresAdmin (/admin) with redirect to /login?redirect=<path>. Nothing is enforced server-side."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "ana@flowboard.app",
+          "password": "Ana123!"
+        },
+        {
+          "role": "member",
+          "username": "leo@flowboard.app",
+          "password": "Leo123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/",
+          "/login",
+          "/api-mock",
+          "/:pathMatch(.*)* (client-side 404)"
+        ],
+        "authenticated": [
+          "/board",
+          "/board/:cardId",
+          "/settings"
+        ],
+        "admin": [
+          "/admin"
+        ]
+      },
+      "persistence": "browser localStorage only: flowboard.auth (session) and flowboard.board (columns + cards, seeded from src/mocks/board.ts on first visit)",
+      "notes": "HTML5 history mode: the host MUST rewrite unknown paths to /index.html with status 200 (nginx: try_files $uri $uri/ /index.html — see nginx.conf; Netlify: public/_redirects; Vercel: vercel.json). Every route including /board/c-3 must return index.html; the SPA renders its own 404 view. Port 5019 is only the Vite dev server (npm run dev), not needed in production. `npm run build` runs vue-tsc type-checking first; use `npm run build-only` to skip it."
+    },
+    {
+      "name": "bun-elysia-htmx-polls",
+      "folder": "20-bun-elysia-htmx-polls",
+      "title": "Pulsebox - live polls",
+      "description": "Live polling app on the Bun runtime with Elysia, server-side JSX templates and HTMX partial swaps (votes and auto-refreshing results). Passwordless email-OTP login with a signed session cookie and an env-defined admin list; bun:sqlite storage.",
+      "kind": "ssr",
+      "stack": [
+        "bun",
+        "elysia",
+        "typescript",
+        "htmx",
+        "sqlite"
+      ],
+      "runtime": "bun@1.4",
+      "port": 3020,
+      "extra_ports": [],
+      "install": "bun install --frozen-lockfile",
+      "build": null,
+      "start": "bun src/index.tsx",
+      "dev": "bun --watch src/index.tsx",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/healthz",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "APP_ENV",
+          "required": false,
+          "default": "development (image sets production)",
+          "description": "Anything other than `production` enables GET /dev/last-code and shows the OTP on the verify page. Set `production` for real deployments."
+        },
+        {
+          "name": "PORT",
+          "required": false,
+          "default": "3020",
+          "description": "HTTP port."
+        },
+        {
+          "name": "SESSION_SECRET",
+          "required": true,
+          "default": "change-me-demo-secret",
+          "description": "HMAC-SHA256 key that signs the session cookie. The demo default works but is insecure; a warning is logged in production."
+        },
+        {
+          "name": "ADMIN_EMAILS",
+          "required": false,
+          "default": "admin@pulsebox.app",
+          "description": "Comma-separated emails that receive the admin role after logging in."
+        },
+        {
+          "name": "DB_PATH",
+          "required": false,
+          "default": "data/pulsebox.sqlite (image: /app/data/pulsebox.sqlite)",
+          "description": "SQLite database file; created and seeded with 3 polls on first start."
+        }
+      ],
+      "auth": {
+        "model": "otp-passwordless",
+        "description": "Email + 6-digit one-time code (10 min, single use). No mail provider: the code is printed to the server log and, when APP_ENV != production, returned by GET /dev/last-code?email=... and shown on the verify page. Success sets an HMAC-signed httpOnly cookie `pb_session` (7 days). Admin = email listed in ADMIN_EMAILS."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "admin@pulsebox.app",
+          "password": "(no password - fetch the OTP from the server log or GET /dev/last-code?email=admin@pulsebox.app)"
+        },
+        {
+          "role": "user",
+          "username": "any@email.address",
+          "password": "(no password - OTP as above)"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/",
+          "/polls/{id}",
+          "/polls/{id}/results",
+          "/polls/{id}/vote",
+          "/login",
+          "/login/verify",
+          "/logout",
+          "/healthz",
+          "/dev/last-code"
+        ],
+        "authenticated": [
+          "/new",
+          "/new/option"
+        ],
+        "admin": [
+          "/admin",
+          "/admin/polls/{id}/close",
+          "/admin/polls/{id}/reopen",
+          "/admin/polls/{id}"
+        ]
+      },
+      "persistence": "sqlite file via bun:sqlite at DB_PATH (image: /app/data/pulsebox.sqlite on the /app/data volume); schema created and 3 demo polls seeded automatically when the polls table is empty",
+      "notes": "Runs as the non-root `bun` user (uid 1000): a bind-mounted data directory must be writable by that uid (named volumes are fine). There is no email delivery - to log in, read the OTP from `docker logs` or call /dev/last-code (non-production only). Set APP_ENV=production and a real SESSION_SECRET for anything public. HTMX is loaded from unpkg CDN; no build step."
+    },
+    {
+      "name": "react-dotnet-kitchen-display",
+      "folder": "21-react-dotnet-kitchen-display",
+      "title": "Ocakbaşı KDS – Restaurant Kitchen Display System",
+      "description": "A real-time restaurant kitchen display: customers order from a table page, the kitchen works a live queue and a public big-screen board follows every order. One ASP.NET Core 10 Minimal API container hosts the React build from wwwroot, pushes updates over a SignalR WebSocket hub and authenticates staff with short-lived JWTs plus a rotating httpOnly refresh cookie.",
+      "kind": "fullstack",
+      "stack": [
+        "dotnet",
+        "aspnetcore",
+        "minimal-api",
+        "signalr",
+        "efcore",
+        "sqlite",
+        "react",
+        "vite",
+        "typescript",
+        "tailwindcss"
+      ],
+      "runtime": "dotnet@10.0",
+      "port": 8021,
+      "extra_ports": [],
+      "install": "cd web && npm ci && cd ../api && dotnet restore",
+      "build": "cd web && npm run build && cd ../api && dotnet publish -c Release -o out /p:UseAppHost=false",
+      "start": "cd api && dotnet out/Kds.Api.dll",
+      "dev": "cd api && dotnet run  # terminal 2: cd web && npm run dev (Vite on 5021, proxies /api, /hubs (ws), /healthz to 8021)",
+      "docker": {
+        "dockerfile": "Dockerfile"
+      },
+      "healthcheck": {
+        "path": "/healthz",
+        "expect_status": 200
+      },
+      "env": [
+        {
+          "name": "ASPNETCORE_URLS",
+          "required": false,
+          "default": "http://0.0.0.0:8021",
+          "description": "Listen address; the code falls back to 0.0.0.0:8021 when neither ASPNETCORE_URLS nor --urls is given (Docker image sets http://+:8021)"
+        },
+        {
+          "name": "ASPNETCORE_ENVIRONMENT",
+          "required": false,
+          "default": "Production",
+          "description": "Production by default; Development only adds verbose logging"
+        },
+        {
+          "name": "JWT_SECRET",
+          "required": false,
+          "default": "change-me-demo-secret-ocakbasi-kds-32chars",
+          "description": "HS256 signing key for access tokens, minimum 32 characters (startup fails otherwise). The default is a DEMO value and is logged as a warning; set a private one in production"
+        },
+        {
+          "name": "JWT_ISSUER",
+          "required": false,
+          "default": "ocakbasi-kds",
+          "description": "Issuer and audience claim of the access tokens"
+        },
+        {
+          "name": "ACCESS_TOKEN_MINUTES",
+          "required": false,
+          "default": "15",
+          "description": "Access token lifetime (the SPA refreshes one minute before expiry)"
+        },
+        {
+          "name": "REFRESH_TOKEN_DAYS",
+          "required": false,
+          "default": "7",
+          "description": "Lifetime of the kds_refresh cookie / stored refresh token"
+        },
+        {
+          "name": "COOKIE_SECURE",
+          "required": false,
+          "default": "false",
+          "description": "Set true when served over HTTPS so the kds_refresh cookie carries the Secure flag"
+        },
+        {
+          "name": "TRUST_PROXY_HEADERS",
+          "required": false,
+          "default": "false",
+          "description": "Set true behind a reverse proxy: honours X-Forwarded-For/X-Forwarded-Proto from any proxy so rate limiting sees the real client IP"
+        },
+        {
+          "name": "CORS_ORIGINS",
+          "required": false,
+          "default": "http://localhost:5021",
+          "description": "Comma-separated browser origins allowed to call the API with credentials; only needed for the Vite dev server – production is same-origin"
+        },
+        {
+          "name": "ORDERS_PER_MINUTE",
+          "required": false,
+          "default": "10",
+          "description": "Fixed-window rate limit for POST /api/orders per client IP (429 with Retry-After when exceeded)"
+        },
+        {
+          "name": "ConnectionStrings__Default",
+          "required": false,
+          "default": "Data Source=data/kds.db",
+          "description": "SQLite connection string; the directory is created automatically. Docker image sets Data Source=/app/data/kds.db"
+        }
+      ],
+      "auth": {
+        "model": "bearer-jwt",
+        "description": "Hybrid JWT: POST /api/auth/login {email,password} returns a 15-minute HS256 access token (claims sub/email/role, sent as Authorization: Bearer) and sets an httpOnly SameSite=Strict cookie 'kds_refresh' (path /api/auth, 7 days, stored as a SHA-256 hash). POST /api/auth/refresh rotates the cookie and issues a new access token (reusing a rotated cookie revokes every session of that user); POST /api/auth/logout revokes it. The SPA keeps the access token in memory only and restores sessions by calling /refresh on load. Roles Admin and Staff enforced by the policies AdminOnly and StaffOrAdmin; missing/invalid token -> 401 problem+json with WWW-Authenticate: Bearer, wrong role -> 403 problem+json. Passwords are hashed with Microsoft.AspNetCore.Identity.PasswordHasher (no full Identity). The SignalR hub /hubs/orders is anonymous and read-only (events orderCreated, orderUpdated, menuChanged). Customer endpoints are public; POST /api/orders and POST /api/auth/login are rate limited per IP."
+      },
+      "credentials": [
+        {
+          "role": "admin",
+          "username": "admin@ocakbasi.dev",
+          "password": "Admin123!"
+        },
+        {
+          "role": "staff",
+          "username": "sef@ocakbasi.dev",
+          "password": "Sef123!"
+        }
+      ],
+      "routes": {
+        "public": [
+          "/",
+          "/order/{tableCode}",
+          "/login",
+          "/healthz",
+          "/openapi/v1.json",
+          "/scalar",
+          "/api/menu",
+          "/api/orders (POST, rate limited)",
+          "/api/orders/{id}",
+          "/api/board",
+          "/api/auth/login",
+          "/api/auth/refresh",
+          "/api/auth/logout",
+          "/hubs/orders (SignalR, WebSocket)"
+        ],
+        "authenticated": [
+          "/kitchen",
+          "/api/auth/me",
+          "/api/orders (GET ?status=)",
+          "/api/orders/{id}/status (PATCH)",
+          "/api/stats"
+        ],
+        "admin": [
+          "/admin/menu",
+          "/admin/users",
+          "/api/menu/admin",
+          "/api/menu/admin/{id}",
+          "/api/users",
+          "/api/users/{id}"
+        ]
+      },
+      "persistence": "SQLite file at api/data/kds.db locally (WAL mode, -shm/-wal side files) or /app/data/kds.db on the /app/data volume in Docker; schema comes from the committed EF Core migration (Database.Migrate() at startup) and an idempotent seeder adds 2 users, 12 menu items and 6 orders when the tables are empty. Refresh tokens are rows in the same database.",
+      "notes": "Single container / single port: the API serves the React build from wwwroot (SPA fallback for every path except /api/* and /hubs/*, which return JSON 404s). Real-time updates use SignalR over WebSockets, so any reverse proxy MUST forward Upgrade/Connection headers for /hubs/ (nginx: proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection \"upgrade\"); without it the client falls back to long polling. Behind HTTPS set COOKIE_SECURE=true, and behind a proxy set TRUST_PROXY_HEADERS=true so the 10/min order limit is per real client IP instead of per proxy. The container runs as the non-root 'app' user (uid 1654) and needs a writable /app/data (a named volume works out of the box; a bind mount must be writable by uid 1654). The start command runs the published DLL from api/ so the database lands in api/data; the web root is resolved automatically (cwd/wwwroot, then <dll dir>/wwwroot, then ../web/dist). Requires the .NET 10 SDK to build and Node >= 20.19 for the web build; port 5021 is only the Vite dev server and is not exposed in production. JWT_SECRET default is a demo value – override it."
+    }
+  ]
+}

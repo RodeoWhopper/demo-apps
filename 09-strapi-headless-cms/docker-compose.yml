@@ -1,0 +1,48 @@
+# Tarla Journal – Strapi 5 headless CMS (port 1337) + decoupled static frontend (port 8009)
+name: 09-strapi-headless-cms
+
+services:
+  cms:
+    build: ./cms
+    image: tarla-journal-cms:local
+    restart: unless-stopped
+    ports:
+      - "1337:1337"
+    env_file:
+      - path: ./cms/.env
+        required: false
+    environment:
+      HOST: 0.0.0.0
+      PORT: 1337
+      NODE_ENV: production
+      DATABASE_CLIENT: sqlite
+      DATABASE_FILENAME: .tmp/data.db
+      # Demo secrets – override in cms/.env for anything beyond a demo
+      APP_KEYS: ${APP_KEYS:-demo-app-key-one,demo-app-key-two,demo-app-key-three,demo-app-key-four}
+      API_TOKEN_SALT: ${API_TOKEN_SALT:-demo-api-token-salt}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-demo-admin-jwt-secret}
+      TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT:-demo-transfer-token-salt}
+      JWT_SECRET: ${JWT_SECRET:-demo-jwt-secret}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-demo-encryption-key-change-me}
+    volumes:
+      - cms_data:/opt/app/.tmp
+      - cms_uploads:/opt/app/public/uploads
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:1337/_health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  frontend:
+    build: ./frontend
+    image: tarla-journal-frontend:local
+    restart: unless-stopped
+    ports:
+      - "8009:80"
+    depends_on:
+      - cms
+
+volumes:
+  cms_data:
+  cms_uploads:

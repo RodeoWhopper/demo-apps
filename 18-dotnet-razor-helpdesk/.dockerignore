@@ -1,0 +1,16 @@
+bin/
+obj/
+data/
+*.db
+*.db-shm
+*.db-wal
+.env
+.git
+.gitignore
+README.md
+deploy.json
+.vs/
+.vscode/
+.idea/
+*.user
+.DS_Store

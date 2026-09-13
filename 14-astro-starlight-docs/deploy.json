@@ -1,0 +1,27 @@
+{
+  "name": "astro-starlight-docs",
+  "folder": "14-astro-starlight-docs",
+  "title": "Kestrel CLI — developer documentation",
+  "description": "Documentation site for a fictional preview-environment CLI, built with Astro 5 and the Starlight docs theme. Static output in dist/ with a client-side Pagefind search index and a splash landing page.",
+  "kind": "static",
+  "stack": ["node", "astro", "starlight", "typescript", "pagefind", "nginx"],
+  "runtime": "node@22",
+  "port": 4314,
+  "extra_ports": [],
+  "install": "npm ci",
+  "build": "npm run build",
+  "start": "npm run preview -- --port 4314 --host",
+  "dev": "npm run dev",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/", "expect_status": 200 },
+  "env": [],
+  "auth": { "model": "none", "description": "Public documentation; no authentication." },
+  "credentials": [],
+  "routes": {
+    "public": ["/", "/getting-started/", "/installation/", "/configuration/", "/reference/cli/", "/guides/preview-environments/", "/guides/ci-integration/", "/guides/secrets-management/", "/changelog/", "/404.html", "/sitemap-index.xml"],
+    "authenticated": [],
+    "admin": []
+  },
+  "persistence": "none (static site; search index is static JSON/WASM under dist/pagefind/)",
+  "notes": "Serve dist/ as static files. Routes are directories with index.html (trailing slash); no SPA fallback — unknown paths should return 404.html. The /pagefind/ directory must be served (it is generated only by `npm run build`, not by `astro dev`). Node >= 18.20.8; built with Node 22."
+}

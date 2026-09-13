@@ -1,0 +1,35 @@
+@page
+@model Helpdesk.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Kayıt";
+}
+<div class="card auth-card p-4">
+    <h1 class="h3 mb-1">Hesap oluştur</h1>
+    <p class="text-muted small mb-3">Yeni hesaplar "Requester" rolüyle açılır; yalnızca kendi biletlerini görür.</p>
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+        <div class="mb-3">
+            <label asp-for="Input.DisplayName" class="form-label">Ad Soyad</label>
+            <input asp-for="Input.DisplayName" class="form-control" />
+            <span asp-validation-for="Input.DisplayName" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Input.Email" class="form-label">E-posta</label>
+            <input asp-for="Input.Email" class="form-control" autocomplete="username" />
+            <span asp-validation-for="Input.Email" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Input.Password" class="form-label">Şifre <span class="text-muted">(en az 8 karakter, büyük/küçük harf, rakam ve sembol)</span></label>
+            <input asp-for="Input.Password" class="form-control" autocomplete="new-password" />
+            <span asp-validation-for="Input.Password" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Input.ConfirmPassword" class="form-label">Şifre (tekrar)</label>
+            <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" />
+            <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Kayıt ol</button>
+    </form>
+    <hr />
+    <p class="small mb-0">Zaten hesabınız var mı? <a asp-page="/Account/Login">Giriş yapın</a></p>
+</div>

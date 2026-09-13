@@ -1,0 +1,40 @@
+{
+  "name": "fastapi-react-tasks",
+  "folder": "15-fastapi-react-tasks",
+  "title": "Orbit Tasks - FastAPI API + React SPA monorepo (two services)",
+  "description": "A team task board split into two deployable services: a FastAPI + SQLAlchemy + SQLite JSON API using the OAuth2 password flow (form-urlencoded /auth/token, Bearer JWT), and a React 19 + Vite + React Router 7 SPA served by nginx that proxies /api/ to the API container.",
+  "kind": "compose",
+  "stack": ["python", "fastapi", "sqlalchemy", "sqlite", "uvicorn", "node", "react", "vite", "typescript", "react-router", "tailwind", "nginx", "docker-compose"],
+  "runtime": "docker",
+  "port": 5015,
+  "extra_ports": [8015],
+  "install": null,
+  "build": "docker compose build",
+  "start": "docker compose up -d",
+  "dev": "cd api && uvicorn app.main:app --port 8015 --reload  # and in another shell: cd web && npm run dev",
+  "docker": { "compose": "docker-compose.yml" },
+  "healthcheck": { "path": "/healthz", "expect_status": 200 },
+  "env": [
+    { "name": "JWT_SECRET", "required": true, "default": "change-me-demo-orbit-jwt-secret", "description": "HS256 secret for the API's access tokens (compose passes it to the api service)." },
+    { "name": "ACCESS_TOKEN_MINUTES", "required": false, "default": "60", "description": "Access token lifetime (api)." },
+    { "name": "CORS_ORIGINS", "required": false, "default": "http://localhost:5015,http://127.0.0.1:5015", "description": "Comma-separated browser origins allowed by the API. Not needed when the SPA talks to the API through the nginx /api proxy (same origin)." },
+    { "name": "DATABASE_URL", "required": false, "default": "sqlite:///./data/orbit.db", "description": "SQLAlchemy URL for the api service; compose sets sqlite:////app/data/orbit.db on the named volume." },
+    { "name": "AUTO_SEED", "required": false, "default": "1", "description": "Seed demo users/projects/tasks at API startup when the users table is empty." },
+    { "name": "VITE_API_URL", "required": false, "default": "/api", "description": "Docker build ARG for the web image (baked into the bundle). Defaults to /api in compose so the SPA uses the nginx proxy; set http://localhost:8015 for a local Vite dev server." }
+  ],
+  "auth": {
+    "model": "bearer-jwt",
+    "description": "OAuth2 password flow: POST application/x-www-form-urlencoded username+password to /auth/token (via the SPA at /api/auth/token) -> {access_token, token_type: bearer, expires_in}. The SPA keeps the token in memory + localStorage and sends Authorization: Bearer on every call; /admin/* requires role=admin (403 otherwise, enforced server-side and mirrored by a client-side 403 page). Deactivated users are rejected with 403."
+  },
+  "credentials": [
+    { "role": "admin", "username": "admin@orbit.dev", "password": "Admin123!" },
+    { "role": "member", "username": "dev@orbit.dev", "password": "Dev123!" }
+  ],
+  "routes": {
+    "public": ["/ (SPA, redirects to /login when signed out)", "/login", "/healthz (nginx)", "/api/healthz", "/api/docs", "/api/auth/token", ":8015/healthz", ":8015/docs"],
+    "authenticated": ["/ (board)", "/projects/:id", "/api/auth/me", "/api/tasks", "/api/tasks/{id}", "/api/projects", "/api/projects/{id}"],
+    "admin": ["/admin (SPA page)", "/api/admin/users", "/api/admin/users/{id}/toggle-active"]
+  },
+  "persistence": "SQLite file inside the api container at /app/data/orbit.db on the named volume orbit-api-data (created and seeded automatically at API startup). The web service is stateless static files.",
+  "notes": "services: api (FastAPI/uvicorn, container port 8015, published 8015, healthcheck /healthz) and web (nginx:1.27-alpine serving the built SPA, container port 5015, published 5015, depends_on api healthy). The web container's nginx.conf proxies /api/ -> http://api:8015/ (prefix stripped) and provides history-API fallback to index.html, so only port 5015 needs to be exposed publicly; 8015 is optional for direct API access/Swagger. VITE_API_URL is a BUILD-TIME arg for the web image - rebuild the web image to change it. Local (non-Docker) run needs two processes: uvicorn on 8015 and Vite on 5015 with VITE_API_URL=http://localhost:8015 and CORS_ORIGINS including http://localhost:5015."
+}

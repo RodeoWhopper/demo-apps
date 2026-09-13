@@ -1,0 +1,53 @@
+server:
+  port: ${PORT:8017}
+  error:
+    whitelabel:
+      enabled: false
+
+spring:
+  application:
+    name: kutuphane-plus
+  datasource:
+    # DB_PATH is the H2 file prefix (without extension); H2 creates <DB_PATH>.mv.db
+    url: jdbc:h2:file:${DB_PATH:./data/library};AUTO_SERVER=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: false
+  h2:
+    console:
+      enabled: false
+  thymeleaf:
+    cache: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    org.hibernate.SQL: warn
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  h2:
+    console:
+      enabled: false
+  jpa:
+    show-sql: false
+server:
+  error:
+    include-stacktrace: never
+    include-message: never

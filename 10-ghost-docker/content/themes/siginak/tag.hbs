@@ -1,0 +1,18 @@
+{{!< default}}
+
+{{#tag}}
+<section class="page-head container narrow">
+    <p class="eyebrow">Etiket</p>
+    <h1>{{name}}</h1>
+    {{#if description}}<p class="page-head__lead">{{description}}</p>{{/if}}
+</section>
+{{/tag}}
+
+<section class="container">
+    <div class="post-feed">
+        {{#foreach posts}}
+            {{> "post-card"}}
+        {{/foreach}}
+    </div>
+    {{pagination}}
+</section>

@@ -1,0 +1,83 @@
+# Çınar Mimarlık – WordPress on Docker
+# Services: db (MariaDB, internal only), wordpress (Apache + PHP 8.3, port 8008), wpcli (one-shot helper used by setup.sh)
+name: 08-wordpress-docker
+
+x-wordpress-env: &wordpress-env
+  WORDPRESS_DB_HOST: db
+  WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME:-cinar}
+  WORDPRESS_DB_USER: ${WORDPRESS_DB_USER:-cinar}
+  WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:-change-me-demo-db-pass}
+  WORDPRESS_TABLE_PREFIX: ${WORDPRESS_TABLE_PREFIX:-wp_}
+  WP_HOME: ${WP_HOME:-http://localhost:8008}
+  WP_SITEURL: ${WP_SITEURL:-http://localhost:8008}
+  # Appended verbatim to wp-config.php by the official image; makes the domain env-driven.
+  WORDPRESS_CONFIG_EXTRA: "${WORDPRESS_CONFIG_EXTRA:-define('WP_HOME', getenv('WP_HOME') ?: 'http://localhost:8008'); define('WP_SITEURL', getenv('WP_SITEURL') ?: 'http://localhost:8008');}"
+
+x-wordpress-volumes: &wordpress-volumes
+  # Full WordPress install (core + wp-config.php) so wp-cli sees the same tree.
+  - wp_core:/var/www/html
+  # wp-content (uploads, plugins, upgrades) persisted separately so it can be backed up on its own.
+  - wp_content:/var/www/html/wp-content
+  # Source-controlled theme and must-use plugin, bind-mounted from the repo.
+  - ./wp-content/themes/cinar:/var/www/html/wp-content/themes/cinar
+  - ./wp-content/mu-plugins:/var/www/html/wp-content/mu-plugins
+
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${WORDPRESS_DB_NAME:-cinar}
+      MARIADB_USER: ${WORDPRESS_DB_USER:-cinar}
+      MARIADB_PASSWORD: ${WORDPRESS_DB_PASSWORD:-change-me-demo-db-pass}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-change-me-demo-root-pass}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  wordpress:
+    image: wordpress:6-php8.3-apache
+    restart: unless-stopped
+    ports:
+      - "8008:80"
+    env_file:
+      - path: .env
+        required: false
+    environment: *wordpress-env
+    volumes: *wordpress-volumes
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/wp-json/cinar/v1/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # One-shot helper: `docker compose run --rm wpcli <wp-cli args>`. Not started by `up` (profile).
+  wpcli:
+    image: wordpress:cli
+    profiles: ["cli"]
+    entrypoint: ["wp"]     # skip the image's `wp help` probe, which fails before core is installed
+    user: "33:33"          # match www-data of the Debian-based wordpress image
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      <<: *wordpress-env
+      HOME: /tmp
+    volumes: *wordpress-volumes
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:
+  wp_core:
+  wp_content:

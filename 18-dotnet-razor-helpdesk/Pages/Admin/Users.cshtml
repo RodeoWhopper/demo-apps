@@ -1,0 +1,43 @@
+@page
+@model Helpdesk.Pages.Admin.UsersModel
+@{
+    ViewData["Title"] = "Kullanıcılar";
+}
+<h1 class="h2 mb-1">Kullanıcılar & roller</h1>
+<p class="text-muted">Bu sayfa <code>[Authorize(Roles = "Admin")]</code> ile korunur; <code>/Admin</code> klasörü ayrıca <code>AuthorizeFolder("/Admin", "AdminOnly")</code> kuralıyla kapalıdır.</p>
+<div class="card">
+    <table class="table table-hover align-middle mb-0">
+        <thead><tr><th>Ad</th><th>E-posta</th><th>Rol</th><th class="text-center">Açtığı bilet</th><th>Kayıt</th><th>Rol değiştir</th></tr></thead>
+        <tbody>
+        @foreach (var row in Model.Rows)
+        {
+            <tr>
+                <td class="fw-semibold">@row.User.DisplayName</td>
+                <td>@row.User.Email</td>
+                <td><span class="badge @(row.Role == "Admin" ? "text-bg-warning" : row.Role == "Agent" ? "text-bg-info" : "text-bg-secondary")">@Labels.Role(row.Role)</span></td>
+                <td class="text-center">@row.Tickets</td>
+                <td class="text-muted small">@row.User.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</td>
+                <td>
+                    @if (row.User.Id == Model.CurrentUserId)
+                    {
+                        <span class="text-muted small">siz</span>
+                    }
+                    else
+                    {
+                        <form method="post" asp-page-handler="SetRole" class="d-flex gap-2 m-0">
+                            <input type="hidden" name="userId" value="@row.User.Id" />
+                            <select name="role" class="form-select form-select-sm" style="width: 160px">
+                                @foreach (var r in Helpdesk.Persistence.DbSeeder.Roles)
+                                {
+                                    <option value="@r" selected="@(r == row.Role)">@Labels.Role(r)</option>
+                                }
+                            </select>
+                            <button class="btn btn-sm btn-outline-primary" type="submit">Kaydet</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

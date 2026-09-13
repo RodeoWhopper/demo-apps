@@ -1,0 +1,58 @@
+# Sığınak – Ghost 5 newsletter/blog on Docker
+# Services: db (MySQL 8, internal only), ghost (port 8010 -> 2368)
+name: 10-ghost-docker
+
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-demo-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ghost}
+      MYSQL_USER: ${MYSQL_USER:-ghost}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me-demo-ghost}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      # TCP ping: the temporary init server runs with --skip-networking, so this only passes once MySQL is really up
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --protocol=tcp --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  ghost:
+    image: ghost:5-alpine
+    restart: unless-stopped
+    ports:
+      - "8010:2368"
+    environment:
+      url: ${GHOST_URL:-http://localhost:8010}
+      NODE_ENV: production
+      database__client: mysql
+      database__connection__host: db
+      database__connection__port: 3306
+      database__connection__user: ${MYSQL_USER:-ghost}
+      database__connection__password: ${MYSQL_PASSWORD:-change-me-demo-ghost}
+      database__connection__database: ${MYSQL_DATABASE:-ghost}
+      # Optional SMTP for member e-mails/newsletters; without it Ghost logs a warning but serves the site
+      mail__transport: ${MAIL_TRANSPORT:-Direct}
+      # Staff logins normally require an e-mailed device-verification code; impossible without SMTP, so it is off by default
+      security__staffDeviceVerification: ${STAFF_DEVICE_VERIFICATION:-false}
+    volumes:
+      - ghost_content:/var/lib/ghost/content
+      - ./content/themes/siginak:/var/lib/ghost/content/themes/siginak
+      - ./content/settings/routes.yaml:/var/lib/ghost/content/settings/routes.yaml
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:2368/ghost/api/admin/site/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+volumes:
+  db_data:
+  ghost_content:

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head><title>Kitap yönetimi · Kütüphane Plus</title></head>
+<body>
+<main class="container py-4 flex-grow-1">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <h1 class="h2 mb-0">Kitaplar <span class="badge badge-gold fs-6 align-middle" th:text="${#lists.size(books)}">10</span></h1>
+    <a class="btn btn-primary" th:href="@{/admin/books/new}">+ Yeni kitap</a>
+  </div>
+  <div class="card">
+    <table class="table table-hover mb-0 align-middle">
+      <thead><tr><th>Başlık</th><th>Yazar</th><th>ISBN</th><th>Tür</th><th class="text-center">Müsait / Toplam</th><th class="text-end"></th></tr></thead>
+      <tbody>
+        <tr th:each="book : ${books}">
+          <td><a th:href="@{/books/{id}(id=${book.id})}" th:text="${book.title}">Başlık</a></td>
+          <td th:text="${book.author}">Yazar</td>
+          <td><code th:text="${book.isbn}">978</code></td>
+          <td th:text="${book.genre}">Roman</td>
+          <td class="text-center"><span th:text="${book.copiesAvailable}">1</span> / <span th:text="${book.copiesTotal}">2</span></td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/books/{id}/edit(id=${book.id})}">Düzenle</a>
+            <form th:action="@{/admin/books/{id}/delete(id=${book.id})}" method="post" class="d-inline" onsubmit="return confirm('Kitap silinsin mi?')">
+              <button class="btn btn-sm btn-outline-danger" type="submit">Sil</button>
+            </form>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

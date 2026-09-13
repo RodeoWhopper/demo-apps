@@ -1,0 +1,8 @@
+node_modules
+data/*.sqlite
+data/*.sqlite-*
+.env
+.git
+README.md
+deploy.json
+.DS_Store

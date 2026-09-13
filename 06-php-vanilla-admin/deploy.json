@@ -1,0 +1,37 @@
+{
+  "name": "php-vanilla-admin",
+  "folder": "06-php-vanilla-admin",
+  "title": "Bakkal Panel - small-shop product & order admin",
+  "description": "Framework-free PHP 8.3 admin panel for a corner grocery: products CRUD, orders with status workflow and admin-only user management. Hand-written router, native PHP sessions, PDO + SQLite.",
+  "kind": "ssr",
+  "stack": ["php", "apache", "sqlite", "tailwind-cdn"],
+  "runtime": "php@8.3",
+  "port": 8006,
+  "extra_ports": [],
+  "install": null,
+  "build": null,
+  "start": "php -S 0.0.0.0:8006 -t public public/index.php",
+  "dev": "APP_ENV=development php -S localhost:8006 -t public public/index.php",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/healthz", "expect_status": 200 },
+  "env": [
+    { "name": "APP_ENV", "required": false, "default": "production", "description": "Set to development to show stack traces on the 500 page." },
+    { "name": "APP_KEY", "required": false, "default": "change-me-demo-key", "description": "Read at boot for parity with the other demo apps; not used cryptographically." },
+    { "name": "DB_PATH", "required": false, "default": "data/bakkal.sqlite (Docker: /var/www/html/data/bakkal.sqlite)", "description": "Path of the SQLite database file; created and seeded on first request." }
+  ],
+  "auth": {
+    "model": "server-session",
+    "description": "Native PHP $_SESSION cookie (bakkal_session) with password_hash/password_verify, per-session CSRF token on every POST form, roles admin/staff. /users is admin-only (staff receive 403)."
+  },
+  "credentials": [
+    { "role": "admin", "username": "admin", "password": "Admin123!" },
+    { "role": "staff", "username": "staff", "password": "Staff123!" }
+  ],
+  "routes": {
+    "public": ["/login", "/healthz"],
+    "authenticated": ["/", "/products", "/products/new", "/products/{id}/edit", "/orders", "/orders/{id}"],
+    "admin": ["/users"]
+  },
+  "persistence": "sqlite file at data/bakkal.sqlite (Docker volume /var/www/html/data), auto-created + seeded with 2 users, 10 products, 6 orders on first request",
+  "notes": "No Composer, no build step. Docker image runs Apache on 8006 with DocumentRoot=public and mod_rewrite; mount a volume at /var/www/html/data to keep the database. Apache must be able to write to data/ (owned by www-data in the image). For a non-Docker deployment the web server must route all requests to public/index.php."
+}

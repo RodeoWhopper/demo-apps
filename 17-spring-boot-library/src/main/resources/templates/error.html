@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head><title>Hata · Kütüphane Plus</title></head>
+<body>
+<main class="container py-5 flex-grow-1 text-center">
+  <p class="display-1 fw-bold text-secondary" th:text="${status} ?: 'Hata'">500</p>
+  <h1 class="h3">Bir şeyler ters gitti</h1>
+  <p class="text-muted" th:text="${error} ?: ''">Hata</p>
+  <a class="btn btn-primary mt-2" th:href="@{/}">Kataloğa dön</a>
+</main>
+</body>
+</html>

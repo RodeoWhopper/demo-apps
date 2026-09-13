@@ -1,0 +1,26 @@
+{
+  "name": "nuxt-content-portfolio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --port 3013",
+    "build": "nuxt build",
+    "generate": "nuxt generate && node scripts/postgenerate.mjs",
+    "preview": "serve .output/public -l 3013",
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@nuxt/content": "3.16.0",
+    "nuxt": "3.21.11",
+    "vue": "3.5.42",
+    "vue-router": "4.6.4"
+  },
+  "devDependencies": {
+    "serve": "14.2.6",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

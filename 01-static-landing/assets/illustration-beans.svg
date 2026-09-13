@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="320" height="240" role="img" aria-label="Illustration of coffee beans and a steaming cup">
+  <defs>
+    <linearGradient id="cup" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4e7d3"/><stop offset="1" stop-color="#d9c2a0"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="160" cy="205" rx="120" ry="18" fill="#2b1d16" opacity=".12"/>
+  <path d="M95 110h130l-12 80c-1 8-7 12-15 12H122c-8 0-14-4-15-12z" fill="url(#cup)" stroke="#2b1d16" stroke-width="3"/>
+  <path d="M225 125c22-4 36 10 30 28-4 12-16 20-32 20" fill="none" stroke="#2b1d16" stroke-width="3"/>
+  <path d="M130 90c-6-10 6-14 0-24M160 86c-6-10 6-14 0-24M190 90c-6-10 6-14 0-24" fill="none" stroke="#b8865a" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+  <g fill="#5a3a27" stroke="#2b1d16" stroke-width="2">
+    <ellipse cx="60" cy="180" rx="22" ry="14" transform="rotate(-25 60 180)"/>
+    <ellipse cx="270" cy="185" rx="22" ry="14" transform="rotate(20 270 185)"/>
+    <ellipse cx="45" cy="130" rx="18" ry="11" transform="rotate(35 45 130)"/>
+  </g>
+  <g fill="none" stroke="#e0b070" stroke-width="2" stroke-linecap="round">
+    <path d="M50 172c8 4 14 10 20 16" transform="rotate(-25 60 180)"/>
+    <path d="M260 177c8 4 14 10 20 16" transform="rotate(20 270 185)"/>
+  </g>
+</svg>

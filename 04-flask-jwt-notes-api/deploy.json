@@ -1,0 +1,43 @@
+{
+  "name": "flask-jwt-notes-api",
+  "folder": "04-flask-jwt-notes-api",
+  "title": "Scribble API - Flask JSON notes API with Bearer JWT",
+  "description": "A JSON REST API for personal notes secured with stateless Bearer JWTs (15-minute access + 7-day refresh tokens, HS256) and a role claim for admin endpoints, with an embedded Swagger UI reading a hand-written OpenAPI 3.1 spec.",
+  "kind": "api",
+  "stack": ["python", "flask", "sqlalchemy", "sqlite", "pyjwt", "gunicorn", "openapi"],
+  "runtime": "python@3.12",
+  "port": 5004,
+  "extra_ports": [],
+  "install": "python -m venv .venv && .venv/bin/pip install -r requirements.txt",
+  "build": null,
+  "start": ".venv/bin/gunicorn -b 0.0.0.0:5004 --workers 2 \"app:create_app()\"",
+  "dev": ".venv/bin/flask --app app run --port 5004 --debug",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/healthz", "expect_status": 200 },
+  "env": [
+    { "name": "JWT_SECRET", "required": true, "default": "change-me-demo-jwt-secret", "description": "HS256 signing secret for access and refresh tokens. Set a long random value in production." },
+    { "name": "SECRET_KEY", "required": false, "default": "change-me-demo-flask-secret", "description": "Flask SECRET_KEY (not used for JWTs; kept for Flask internals)." },
+    { "name": "JWT_ACCESS_MINUTES", "required": false, "default": "15", "description": "Access token lifetime in minutes." },
+    { "name": "JWT_REFRESH_DAYS", "required": false, "default": "7", "description": "Refresh token lifetime in days." },
+    { "name": "DATABASE_PATH", "required": false, "default": "data/scribble.db", "description": "SQLite file path; absolute or relative to the project root (parent dir auto-created). Docker image sets /app/data/scribble.db." },
+    { "name": "AUTO_SEED", "required": false, "default": "1", "description": "Seed demo users/notes at startup when the users table is empty." },
+    { "name": "CORS_ORIGINS", "required": false, "default": "*", "description": "Allowed CORS origins ('*' or comma-separated list)." },
+    { "name": "PORT", "required": false, "default": "5004", "description": "Bind port (Docker CMD only)." },
+    { "name": "GUNICORN_WORKERS", "required": false, "default": "2", "description": "Gunicorn worker count (Docker CMD only)." }
+  ],
+  "auth": {
+    "model": "bearer-jwt",
+    "description": "POST /auth/login (JSON email+password) returns access_token (15 min) and refresh_token (7 days). Send 'Authorization: Bearer <access_token>' on protected routes; POST /auth/refresh with the refresh token to renew. Admin routes require the JWT claim role=admin (403 otherwise). No cookies, no sessions."
+  },
+  "credentials": [
+    { "role": "admin", "username": "admin@scribble.dev", "password": "Admin123!" },
+    { "role": "user", "username": "demo@scribble.dev", "password": "Demo123!" }
+  ],
+  "routes": {
+    "public": ["/", "/docs", "/openapi.yaml", "/healthz", "/auth/register", "/auth/login", "/auth/refresh"],
+    "authenticated": ["/auth/me", "/notes", "/notes/<id>"],
+    "admin": ["/admin/users", "/admin/users/<id>", "/admin/stats"]
+  },
+  "persistence": "SQLite file at data/scribble.db (DATABASE_PATH); Docker image stores it at /app/data (declared VOLUME). Tables are created and demo data seeded automatically on first start (create_app), or explicitly with `flask --app app seed`.",
+  "notes": "Single container, no external services. Startup is safe with multiple gunicorn workers (concurrent create_all/seed is tolerated). The docs page loads swagger-ui-dist from cdn.jsdelivr.net at browser time; the API itself has no runtime network dependency. GET / redirects (302) to /docs. Mount a writable volume at /app/data to keep data across restarts."
+}

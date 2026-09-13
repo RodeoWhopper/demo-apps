@@ -1,0 +1,71 @@
+---
+title: Installation
+description: Install the Kestrel CLI with the install script, Homebrew, npm or Docker, and verify the binary.
+sidebar:
+  order: 2
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Kestrel ships as a single static binary for macOS (Intel and Apple Silicon), Linux (x86-64, arm64) and Windows via WSL 2. Pick whichever method fits your machine.
+
+<Tabs syncKey="install">
+  <TabItem label="Install script">
+    ```bash
+    curl -fsSL https://kestrel.example/install.sh | sh
+    ```
+    Installs to `~/.local/bin/kestrel` and prints a line to add to your shell profile if that directory is not on `PATH`.
+  </TabItem>
+  <TabItem label="Homebrew">
+    ```bash
+    brew install kestrel-example/tap/kestrel
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```bash
+    npm install -g @kestrel-example/cli
+    ```
+    The npm package downloads the matching native binary on install; it is a thin wrapper, not a JavaScript implementation.
+  </TabItem>
+  <TabItem label="Docker">
+    ```bash
+    docker run --rm -it -v "$PWD":/work -w /work ghcr.io/kestrel-example/kestrel:1.4 up
+    ```
+    Useful in CI images that cannot install packages. Mount your credentials or pass `KESTREL_TOKEN`.
+  </TabItem>
+</Tabs>
+
+## Verify
+
+```bash
+kestrel version
+```
+
+```text
+kestrel 1.4.0 (darwin/arm64) commit 9f1c2ab built 2026-08-30
+```
+
+## Shell completions
+
+```bash
+kestrel completion zsh  > "${fpath[1]}/_kestrel"
+kestrel completion bash > /etc/bash_completion.d/kestrel
+kestrel completion fish > ~/.config/fish/completions/kestrel.fish
+```
+
+## Upgrading
+
+```bash
+kestrel self-update
+```
+
+Homebrew and npm users should upgrade through their package manager instead; `self-update` refuses to overwrite a binary it did not install.
+
+## Uninstalling
+
+Remove the binary and the config directory:
+
+```bash
+rm -f ~/.local/bin/kestrel
+rm -rf ~/.config/kestrel
+```

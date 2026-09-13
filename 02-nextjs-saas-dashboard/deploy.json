@@ -1,0 +1,40 @@
+{
+  "name": "nextjs-saas-dashboard",
+  "folder": "02-nextjs-saas-dashboard",
+  "title": "Lumeo Analytics – SaaS dashboard (Next.js 15)",
+  "description": "Fictional product-analytics SaaS: marketing pages plus a role-protected dashboard and admin area. Auth is a jose-signed HS256 JWT in an httpOnly cookie, enforced by Next.js middleware.",
+  "kind": "ssr",
+  "stack": ["node", "nextjs", "react", "typescript", "tailwindcss", "jose", "bcryptjs"],
+  "runtime": "node@22",
+  "port": 3002,
+  "extra_ports": [],
+  "install": "npm ci",
+  "build": "npm run build",
+  "start": "npm start",
+  "dev": "npm run dev",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/api/health", "expect_status": 200 },
+  "env": [
+    { "name": "AUTH_SECRET", "required": false, "default": "change-me-demo-secret-lumeo", "description": "HS256 secret used to sign/verify the session JWT. Falls back to the demo value when unset; set a long random string in real deployments." },
+    { "name": "PORT", "required": false, "default": "3002", "description": "HTTP port of the standalone server." },
+    { "name": "HOST", "required": false, "default": "0.0.0.0", "description": "Bind address (npm start maps it to Next's HOSTNAME)." },
+    { "name": "COOKIE_SECURE", "required": false, "default": "false", "description": "Set to \"true\" behind HTTPS so the session cookie gets the Secure flag. Keep false for plain-HTTP smoke tests." },
+    { "name": "DATA_DIR", "required": false, "default": "./data (Docker: /app/data)", "description": "Directory holding db.json (auto-created and seeded on first request)." }
+  ],
+  "auth": {
+    "model": "jwt-cookie",
+    "description": "Login (Server Action form or POST /api/login) verifies a bcryptjs hash and sets cookie `lumeo_session` = HS256 JWT (8h, httpOnly, SameSite=Lax). middleware.ts verifies it for /dashboard/* (any user) and /admin/* (role admin); unauthenticated -> 307 to /login?next=..., non-admin on /admin -> 403."
+  },
+  "credentials": [
+    { "role": "admin", "username": "admin@lumeo.dev", "password": "Admin123!" },
+    { "role": "member", "username": "user@lumeo.dev", "password": "User123!" },
+    { "role": "member", "username": "ops@lumeo.dev", "password": "User123!" }
+  ],
+  "routes": {
+    "public": ["/", "/pricing", "/login", "/api/health", "/api/login"],
+    "authenticated": ["/dashboard", "/dashboard/projects/[id]", "/api/projects", "/api/logout"],
+    "admin": ["/admin"]
+  },
+  "persistence": "JSON file at data/db.json (DATA_DIR), auto-created and seeded with 3 users + 8 projects on first request; role changes are written back to it.",
+  "notes": "Requires a writable DATA_DIR (Docker: mount a volume at /app/data). `npm start` runs the Next.js standalone server (.next/standalone/server.js) produced by `npm run build`; the build's postbuild step copies static assets into it. Smoke test: POST /api/login with JSON {email,password} using a cookie jar, then GET /dashboard (200) vs. without cookie (307 to /login). `npm audit` reports advisories only in Next's bundled postcss (transitive; fix requires Next 16)."
+}

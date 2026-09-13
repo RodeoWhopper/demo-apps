@@ -1,0 +1,24 @@
+# Root-level ignore (each app also ships its own .gitignore)
+node_modules/
+vendor/
+.venv/
+venv/
+target/
+bin/
+obj/
+dist/
+build/
+.next/
+.nuxt/
+.output/
+.svelte-kit/
+.astro/
+.tmp/
+__pycache__/
+*.db
+*.sqlite
+*.sqlite3
+*.mv.db
+.env
+.DS_Store
+.claude/settings.local.json

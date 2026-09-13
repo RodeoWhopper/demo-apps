@@ -1,0 +1,14 @@
+{% extends "blog/base.html" %}
+{% block title %}Essays{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Essays worth the time they take.</h1>
+  <p class="lede">{{ SITE_TAGLINE }} New pieces most weeks; older ones age well.</p>
+</section>
+<section class="cards">
+  {% for post in posts %}{% include "blog/_post_card.html" %}{% empty %}
+    <p class="muted">Nothing published yet. Run <code>python manage.py seed_demo</code> or write the first essay.</p>
+  {% endfor %}
+</section>
+{% include "blog/_pagination.html" %}
+{% endblock %}

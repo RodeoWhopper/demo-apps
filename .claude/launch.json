@@ -1,0 +1,16 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "control-panel",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "start",
+        "--prefix",
+        "00-control-panel"
+      ],
+      "port": 8000,
+      "autoPort": true
+    }
+  ]
+}

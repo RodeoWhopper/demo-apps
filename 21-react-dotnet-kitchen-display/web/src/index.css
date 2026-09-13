@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+/* Kitchen-screen palette: near-black "coal" surfaces with warm "ember" amber accents. */
+@theme {
+  --color-coal-950: #0b0d10;
+  --color-coal-900: #111419;
+  --color-coal-800: #181c23;
+  --color-coal-700: #232833;
+  --color-coal-600: #333a47;
+  --color-coal-500: #4b5363;
+  --color-ember-300: #fcd34d;
+  --color-ember-400: #fbbf24;
+  --color-ember-500: #f59e0b;
+  --color-ember-600: #d97706;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-coal-950 text-zinc-100 antialiased;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition select-none disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-ember-500 text-coal-950 hover:bg-ember-400 active:bg-ember-600;
+  }
+  .btn-ghost {
+    @apply bg-coal-700 text-zinc-100 hover:bg-coal-600;
+  }
+  .btn-danger {
+    @apply bg-rose-600/80 text-white hover:bg-rose-500;
+  }
+  .btn-success {
+    @apply bg-emerald-500 text-coal-950 hover:bg-emerald-400;
+  }
+  .btn-xl {
+    @apply min-h-14 rounded-xl px-5 text-lg;
+  }
+  .input {
+    @apply w-full rounded-lg border border-coal-600 bg-coal-900 px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus:border-ember-500 focus:ring-2 focus:ring-ember-500/30 focus:outline-none;
+  }
+  .card {
+    @apply rounded-xl border border-coal-700 bg-coal-800;
+  }
+  .label {
+    @apply mb-1 block text-xs font-semibold tracking-wide text-zinc-400 uppercase;
+  }
+  .table-head {
+    @apply text-left text-xs font-semibold tracking-wide text-zinc-400 uppercase;
+  }
+}

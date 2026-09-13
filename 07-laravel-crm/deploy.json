@@ -1,0 +1,42 @@
+{
+  "name": "laravel-crm",
+  "folder": "07-laravel-crm",
+  "title": "Halka CRM - contacts & deals pipeline",
+  "description": "Laravel 13 CRM with a contacts directory and a deals pipeline (lead/qualified/won/lost), Blade views styled with Tailwind from a CDN, SQLite storage and a hand-written session login with an admin-only user area.",
+  "kind": "fullstack",
+  "stack": ["php", "laravel", "blade", "sqlite", "tailwind-cdn"],
+  "runtime": "php@8.3",
+  "port": 8007,
+  "extra_ports": [],
+  "install": "composer install --no-dev --optimize-autoloader",
+  "build": null,
+  "start": "php artisan migrate --force --seed && php artisan serve --host=0.0.0.0 --port=8007 --no-reload",
+  "dev": "php artisan serve --port=8007",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/healthz", "expect_status": 200 },
+  "env": [
+    { "name": "APP_KEY", "required": false, "default": null, "description": "Laravel encryption key (base64:...). If empty the Docker entrypoint generates a temporary one, so sessions reset on every restart; set it for stable sessions (`php artisan key:generate --show`)." },
+    { "name": "APP_ENV", "required": false, "default": "production", "description": "Laravel environment name." },
+    { "name": "APP_DEBUG", "required": false, "default": "false", "description": "Show stack traces on errors." },
+    { "name": "APP_URL", "required": false, "default": "http://localhost:8007", "description": "Public base URL used for generated links." },
+    { "name": "DB_CONNECTION", "required": false, "default": "sqlite", "description": "Database driver; the demo only ships SQLite." },
+    { "name": "DB_DATABASE", "required": false, "default": "/data/database.sqlite (image) / database/database.sqlite (local)", "description": "Path of the SQLite file; created by the entrypoint if missing." },
+    { "name": "SESSION_DRIVER", "required": false, "default": "file", "description": "Session store (file or database)." },
+    { "name": "PHP_CLI_SERVER_WORKERS", "required": false, "default": "4", "description": "Worker processes for the PHP built-in server behind `artisan serve`." }
+  ],
+  "auth": {
+    "model": "server-session",
+    "description": "Laravel session guard driven by a hand-written LoginController (Auth::attempt), `auth` middleware for the app, and a custom EnsureUserIsAdmin middleware (alias `admin`) protecting /admin/*. CSRF via the framework's _token field."
+  },
+  "credentials": [
+    { "role": "admin", "username": "admin@halka.dev", "password": "Admin123!" },
+    { "role": "rep", "username": "rep@halka.dev", "password": "Rep123!" }
+  ],
+  "routes": {
+    "public": ["/", "/login", "/healthz", "/up"],
+    "authenticated": ["/dashboard", "/contacts", "/contacts/{id}", "/deals", "/deals/{id}"],
+    "admin": ["/admin/users"]
+  },
+  "persistence": "sqlite file (image default /data/database.sqlite on the /data volume; local default database/database.sqlite). Entrypoint runs migrate --force --seed on every start; the seeder is idempotent (skips when a user exists) and creates 2 users, 20 contacts, 15 deals.",
+  "notes": "Runs `php artisan serve` inside php:8.3-cli as root (fine for a demo; put a reverse proxy in front for TLS). No Node/Vite build step - Tailwind comes from a CDN. Mount a volume at /data to persist the database. Provide APP_KEY to keep sessions valid across restarts. First start takes ~5-10 s (migrate + optimize)."
+}

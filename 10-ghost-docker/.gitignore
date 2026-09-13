@@ -1,0 +1,11 @@
+.env
+*.log
+.DS_Store
+# Ghost content lives in the named volume; only the theme + routes.yaml are tracked
+content/*
+!content/themes/
+content/themes/*
+!content/themes/siginak/
+!content/settings/
+content/settings/*
+!content/settings/routes.yaml

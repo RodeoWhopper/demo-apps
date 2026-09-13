@@ -1,0 +1,27 @@
+{
+  "name": "nuxt-content-portfolio",
+  "folder": "13-nuxt-content-portfolio",
+  "title": "Mara Yılmaz — Product Designer portfolio & blog",
+  "description": "Personal portfolio and blog driven entirely by markdown in content/ via @nuxt/content v3. Fully static: `nuxt generate` writes .output/public which any static host or the included nginx image can serve.",
+  "kind": "static",
+  "stack": ["node", "nuxt", "nuxt-content", "vue", "typescript", "nginx"],
+  "runtime": "node@22",
+  "port": 3013,
+  "extra_ports": [],
+  "install": "npm ci",
+  "build": "npm run generate",
+  "start": "npx serve .output/public -l 3013",
+  "dev": "npm run dev",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/", "expect_status": 200 },
+  "env": [],
+  "auth": { "model": "none", "description": "Public portfolio; no authentication." },
+  "credentials": [],
+  "routes": {
+    "public": ["/", "/work", "/work/:slug", "/blog", "/blog?tag=:tag", "/blog/:slug", "/about", "/rss.xml", "/not-found", "/404.html"],
+    "authenticated": [],
+    "admin": []
+  },
+  "persistence": "none at runtime; content is markdown in content/ compiled into a SQLite dump at build time (Node's built-in node:sqlite, no native addon)",
+  "notes": "`npm run generate` = `nuxt generate && node scripts/postgenerate.mjs` (copies the pre-rendered /not-found page over 404.html). Static output only — serve .output/public. Do NOT use an SPA fallback to index.html; every route is a real HTML file and unknown paths should return the pre-rendered 404.html. Build needs Node >= 22.12 (uses node:sqlite). The RSS feed is a pre-rendered nitro route, so /rss.xml exists as a file in the output. `serve` is a devDependency, so run `npm ci` (not `--omit=dev`) before `npm start`-style preview, or use the nginx Dockerfile."
+}

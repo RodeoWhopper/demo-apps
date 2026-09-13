@@ -1,0 +1,35 @@
+{
+  "name": "control-panel",
+  "folder": "00-control-panel",
+  "title": "Demo Apps Control Panel",
+  "description": "Local operator UI that builds, starts, stops, resets and monitors the 20 demo apps through Docker Compose, streaming job output live.",
+  "kind": "fullstack",
+  "stack": ["node", "express", "docker-compose", "sse", "vanilla-js"],
+  "runtime": "node@22",
+  "port": 8000,
+  "extra_ports": [],
+  "install": "npm ci",
+  "build": null,
+  "start": "npm start",
+  "dev": "npm run dev",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/healthz", "expect_status": 200 },
+  "env": [
+    { "name": "PORT", "required": false, "default": "8000", "description": "Panel HTTP port" },
+    { "name": "HOST", "required": false, "default": "127.0.0.1", "description": "Bind address; only expose beyond localhost together with PANEL_TOKEN" },
+    { "name": "PANEL_TOKEN", "required": false, "default": null, "description": "Shared secret required on every /api call when set (header x-panel-token or ?token=)" },
+    { "name": "DEMO_APPS_ROOT", "required": false, "default": "<parent folder>", "description": "Folder containing the NN-* app folders" },
+    { "name": "BUILD_CONCURRENCY", "required": false, "default": "2", "description": "Max simultaneous start/rebuild jobs (docker builds)" },
+    { "name": "POLL_INTERVAL_MS", "required": false, "default": "4000", "description": "Docker + health polling interval" },
+    { "name": "PUBLIC_HOST", "required": false, "default": "localhost", "description": "Host name used in the Open links" }
+  ],
+  "auth": { "model": "none", "description": "No login. Optional shared token via PANEL_TOKEN. Bind to 127.0.0.1 by default because the panel executes docker commands." },
+  "credentials": [],
+  "routes": {
+    "public": ["/", "/healthz", "/api/state", "/api/events", "/api/apps/:folder/logs", "/api/apps/:folder/readme", "/api/jobs", "/api/jobs/:id"],
+    "authenticated": ["POST /api/apps/:folder/{start|stop|restart|rebuild|reset|setup}", "POST /api/all/{start|stop}", "POST /api/reload"],
+    "admin": []
+  },
+  "persistence": "none (jobs are kept in memory; app data lives in the apps' own Docker volumes)",
+  "notes": "Operator tool, not one of the demo apps. Needs the docker CLI with the compose plugin and access to the Docker daemon. Compose-native apps (08-11, 15) are run from their own folder with the default project name so their setup scripts keep working; Dockerfile apps use the generated files in stacks/. Setup scripts need bash, curl and python3 on the machine running the panel."
+}

@@ -1,0 +1,41 @@
+{
+  "name": "django-blog-admin",
+  "folder": "03-django-blog-admin",
+  "title": "Pergament - Django long-form blog with admin backoffice",
+  "description": "A server-rendered publishing blog (Markdown posts, categories, moderated comments, RSS, search) using classic Django session auth and the built-in Django admin as its CMS-style backoffice.",
+  "kind": "cms",
+  "stack": ["python", "django", "sqlite", "gunicorn", "whitenoise"],
+  "runtime": "python@3.12",
+  "port": 8003,
+  "extra_ports": [],
+  "install": "python -m venv .venv && .venv/bin/pip install -r requirements.txt",
+  "build": ".venv/bin/python manage.py migrate --noinput && .venv/bin/python manage.py collectstatic --noinput && .venv/bin/python manage.py seed_demo",
+  "start": ".venv/bin/gunicorn pergament.wsgi:application --bind 0.0.0.0:8003 --workers 2",
+  "dev": "DJANGO_DEBUG=1 .venv/bin/python manage.py runserver 0.0.0.0:8003",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/healthz/", "expect_status": 200 },
+  "env": [
+    { "name": "DJANGO_SECRET_KEY", "required": true, "default": "change-me-demo-secret-pergament", "description": "Django SECRET_KEY used for sessions/CSRF signing. Set a long random value in production." },
+    { "name": "DJANGO_DEBUG", "required": false, "default": "0", "description": "1/true enables Django debug mode (never in production)." },
+    { "name": "DJANGO_ALLOWED_HOSTS", "required": false, "default": "*", "description": "Comma-separated list of allowed Host header values." },
+    { "name": "DJANGO_CSRF_TRUSTED_ORIGINS", "required": false, "default": "", "description": "Comma-separated origins WITH scheme (e.g. https://blog.example.com); required for form POSTs when served over HTTPS behind a proxy." },
+    { "name": "DJANGO_DB_PATH", "required": false, "default": "data/db.sqlite3", "description": "SQLite file path; absolute or relative to the project root. Parent directory is created automatically. The Docker image sets /app/data/db.sqlite3." },
+    { "name": "PORT", "required": false, "default": "8003", "description": "Port gunicorn binds to (entrypoint.sh only)." },
+    { "name": "GUNICORN_WORKERS", "required": false, "default": "2", "description": "Number of gunicorn workers (entrypoint.sh only)." }
+  ],
+  "auth": {
+    "model": "server-session",
+    "description": "Django contrib.auth session cookies (sessionid + csrftoken). /accounts/login/ POSTs a CSRF-protected form; /write/, /dashboard/ and post editing require a logged-in user; /admin/ requires is_staff. Logout is POST-only."
+  },
+  "credentials": [
+    { "role": "admin (superuser, staff)", "username": "admin", "password": "Admin123!" },
+    { "role": "author (non-staff)", "username": "editor", "password": "Editor123!" }
+  ],
+  "routes": {
+    "public": ["/", "/post/<slug>/", "/category/<slug>/", "/search/?q=", "/feed/", "/healthz/", "/accounts/login/", "/admin/login/"],
+    "authenticated": ["/write/", "/dashboard/", "/post/<slug>/edit/", "/accounts/logout/"],
+    "admin": ["/admin/"]
+  },
+  "persistence": "SQLite file at data/db.sqlite3 (DJANGO_DB_PATH); Docker image stores it at /app/data (declared VOLUME). Created by `migrate`, seeded idempotently by `seed_demo` (entrypoint.sh runs both on every start).",
+  "notes": "Single container, no external services. entrypoint.sh runs migrate -> collectstatic -> seed_demo -> gunicorn on $PORT (8003). Mount a writable volume at /app/data to keep posts across restarts. When served over HTTPS via a reverse proxy set DJANGO_CSRF_TRUSTED_ORIGINS to the public origin, otherwise login/comment form POSTs fail CSRF checks. Static files are served by WhiteNoise from the same process (no separate static server needed). Requires Python 3.12+ locally (verified on 3.14; Docker image uses 3.12)."
+}

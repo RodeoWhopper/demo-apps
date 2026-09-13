@@ -1,0 +1,14 @@
+/*
+Theme Name: Çınar Mimarlık
+Theme URI: http://localhost:8008/
+Author: Çınar Mimarlık Studio
+Author URI: http://localhost:8008/
+Description: Custom block-free classic theme for the Çınar Mimarlık architecture studio demo site. Front page hero, project grid driven by the "project" custom post type, and minimal typographic pages.
+Version: 1.0.0
+Requires at least: 6.0
+Tested up to: 6.8
+Requires PHP: 8.1
+License: MIT
+Text Domain: cinar
+*/
+/* Styles live in assets/main.css (enqueued from functions.php). */

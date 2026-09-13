@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page(~{::title}, ~{::main})}">
+<head><title>Tüm ödünçler · Kütüphane Plus</title></head>
+<body>
+<main class="container py-4 flex-grow-1">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <h1 class="h2 mb-0">Tüm ödünçler</h1>
+    <div class="text-muted"><span th:text="${activeCount}">2</span> aktif · <span class="text-danger" th:text="${overdueCount}">1</span> gecikmiş</div>
+  </div>
+  <div class="card">
+    <table class="table table-hover mb-0 align-middle">
+      <thead><tr><th>#</th><th>Kitap</th><th>Üye</th><th>Alındı</th><th>Son iade</th><th>Durum</th><th class="text-end"></th></tr></thead>
+      <tbody>
+        <tr th:each="loan : ${loans}">
+          <td th:text="${loan.id}">1</td>
+          <td th:text="${loan.book.title}">Kitap</td>
+          <td><span th:text="${loan.member.fullName}">Üye</span><div class="small text-muted" th:text="${loan.member.email}">e-posta</div></td>
+          <td th:text="${#temporals.format(loan.borrowedAt, 'dd.MM.yyyy')}">01.01.2026</td>
+          <td th:text="${#temporals.format(loan.dueAt, 'dd.MM.yyyy')}">15.01.2026</td>
+          <td>
+            <span class="badge text-bg-success" th:if="${loan.status == 'ACTIVE'}">Ödünçte</span>
+            <span class="badge text-bg-danger" th:if="${loan.status == 'OVERDUE'}">Gecikmiş</span>
+            <span class="badge text-bg-secondary" th:if="${loan.status == 'RETURNED'}" th:text="'İade: ' + ${#temporals.format(loan.returnedAt, 'dd.MM.yyyy')}">İade</span>
+          </td>
+          <td class="text-end">
+            <form th:if="${loan.active}" th:action="@{/loans/{id}/return(id=${loan.id})}" method="post" class="m-0">
+              <input type="hidden" name="back" value="admin">
+              <button class="btn btn-sm btn-outline-primary" type="submit">İade al</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(loans)}"><td colspan="7" class="text-center text-muted py-4">Kayıt yok.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

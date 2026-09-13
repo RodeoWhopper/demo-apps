@@ -1,0 +1,9 @@
+{{define "title"}}404 · {{.Brand}}{{end}}
+{{define "content"}}
+<div class="mx-auto max-w-xl text-center py-16">
+  <p class="font-mono text-7xl font-black text-ink-700">404</p>
+  <h1 class="mt-4 text-2xl font-bold">Bu kısa bağlantı bulunamadı</h1>
+  <p class="mt-2 text-slate-400">"<span class="font-mono text-amber-300">/{{.Code}}</span>" için kayıt yok. Silinmiş ya da hiç oluşturulmamış olabilir.</p>
+  <a href="/" class="mt-8 inline-block rounded-lg bg-amber-400 px-5 py-3 font-semibold text-ink-950 hover:bg-amber-500">Yeni bağlantı oluştur</a>
+</div>
+{{end}}

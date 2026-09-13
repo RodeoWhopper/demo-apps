@@ -1,0 +1,10 @@
+<article class="card">
+  <p class="eyebrow">
+    {% if post.category %}<a href="{{ post.category.get_absolute_url }}">{{ post.category.name }}</a> · {% endif %}
+    <time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|date:"j F Y" }}</time>
+    · {{ post.reading_minutes }} min read
+  </p>
+  <h2 class="card-title"><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h2>
+  {% if post.excerpt %}<p class="excerpt">{{ post.excerpt }}</p>{% endif %}
+  <p class="byline">by {{ post.author.get_full_name|default:post.author.username }}</p>
+</article>

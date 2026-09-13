@@ -1,0 +1,6 @@
+# Route every request that is not a real file through the front controller.
+Options -Indexes
+RewriteEngine On
+RewriteBase /
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [QSA,L]

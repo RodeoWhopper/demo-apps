@@ -1,0 +1,34 @@
+{
+  "name": "go-gin-url-shortener",
+  "folder": "16-go-gin-url-shortener",
+  "title": "Kısa.link – URL Shortener",
+  "description": "A Go/Gin URL shortener with click statistics, a JSON API and an HTTP Basic Auth protected admin panel, persisted in a pure-Go SQLite database and compiled into a single static binary.",
+  "kind": "fullstack",
+  "stack": ["go", "gin", "sqlite", "html-template", "tailwind"],
+  "runtime": "go@1.25",
+  "port": 8016,
+  "extra_ports": [],
+  "install": "go mod download",
+  "build": "CGO_ENABLED=0 go build -trimpath -ldflags=\"-s -w\" -o bin/kisa ./cmd/server",
+  "start": "./bin/kisa",
+  "dev": "go run ./cmd/server",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/healthz", "expect_status": 200 },
+  "env": [
+    { "name": "PORT", "required": false, "default": "8016", "description": "HTTP port to listen on" },
+    { "name": "BASE_URL", "required": false, "default": "http://localhost:8016", "description": "Public base URL used to build short links (set to the deployed origin, no trailing slash)" },
+    { "name": "ADMIN_USER", "required": false, "default": "admin", "description": "HTTP Basic Auth username for /admin" },
+    { "name": "ADMIN_PASS", "required": false, "default": "Admin123!", "description": "HTTP Basic Auth password for /admin (demo value; override in real deployments)" },
+    { "name": "DB_PATH", "required": false, "default": "data/kisa.db", "description": "SQLite database file path; directory is created if missing (Docker image sets /data/kisa.db)" },
+    { "name": "GIN_MODE", "required": false, "default": "debug", "description": "Gin mode: debug | release | test (Docker image sets release)" }
+  ],
+  "auth": { "model": "http-basic", "description": "Public shortening, redirect, stats and JSON API. The /admin area is protected by HTTP Basic Auth (gin.BasicAuth) with credentials from ADMIN_USER / ADMIN_PASS; unauthenticated requests get 401 with a WWW-Authenticate header." },
+  "credentials": [ { "role": "admin", "username": "admin", "password": "Admin123!" } ],
+  "routes": {
+    "public": ["/", "/shorten", "/:code", "/:code/stats", "/api/links/:code", "/healthz", "/static/*"],
+    "authenticated": [],
+    "admin": ["/admin", "/admin/links/:code/delete", "/admin/export.csv"]
+  },
+  "persistence": "sqlite file at data/kisa.db (WAL mode; /data/kisa.db inside the container) – schema migrated and 5 demo links seeded on first start",
+  "notes": "Single static binary, no CGO needed. go.mod requires go >= 1.25 (Go toolchains >= 1.21 auto-download it). Container runs as uid 65532 (distroless nonroot): a named volume mounted at /data works out of the box, but a host bind-mount directory must be writable by uid 65532 (chown 65532:65532 ./data). Set BASE_URL to the externally visible origin so generated short links are correct."
+}

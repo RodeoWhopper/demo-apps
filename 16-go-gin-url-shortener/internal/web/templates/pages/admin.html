@@ -1,0 +1,50 @@
+{{define "title"}}{{.Title}} · {{.Brand}}{{end}}
+{{define "content"}}
+<div class="flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <p class="text-xs uppercase tracking-widest text-amber-300">HTTP Basic Auth · {{.AdminUser}}</p>
+    <h1 class="mt-1 text-3xl font-bold">Yönetim paneli</h1>
+    <p class="mt-1 text-sm text-slate-400">{{.Stats.Links}} bağlantı · {{.Stats.Clicks}} toplam tıklama</p>
+  </div>
+  <a href="/admin/export.csv" class="rounded-lg border border-amber-400/60 px-4 py-2 text-sm font-semibold text-amber-300 hover:bg-amber-400/10">CSV dışa aktar</a>
+</div>
+
+{{if .Deleted}}
+<div class="mt-6 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+  <span class="font-mono">/{{.Deleted}}</span> silindi.
+</div>
+{{end}}
+
+<div class="mt-6 overflow-x-auto rounded-xl border border-ink-700 bg-ink-900">
+  <table class="min-w-full text-sm">
+    <thead class="bg-ink-800/60 text-left text-xs uppercase tracking-wide text-slate-400">
+      <tr>
+        <th class="px-4 py-3">Kod</th>
+        <th class="px-4 py-3">Hedef</th>
+        <th class="px-4 py-3 text-right">Tıklama</th>
+        <th class="px-4 py-3">Oluşturuldu</th>
+        <th class="px-4 py-3">Son tıklama</th>
+        <th class="px-4 py-3"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-ink-700/70">
+      {{range .Links}}
+      <tr class="hover:bg-ink-800/40">
+        <td class="px-4 py-3 font-mono"><a href="/{{.Code}}/stats" class="text-amber-300 hover:underline">{{.Code}}</a></td>
+        <td class="px-4 py-3 max-w-md truncate text-slate-300" title="{{.URL}}">{{trunc 64 .URL}}</td>
+        <td class="px-4 py-3 text-right font-semibold">{{.Clicks}}</td>
+        <td class="px-4 py-3 text-slate-400 whitespace-nowrap">{{date .CreatedAt}}</td>
+        <td class="px-4 py-3 text-slate-400 whitespace-nowrap">{{datep .LastClickAt}}</td>
+        <td class="px-4 py-3 text-right">
+          <form method="post" action="/admin/links/{{.Code}}/delete" onsubmit="return confirm('/{{.Code}} silinsin mi?')">
+            <button class="rounded-md border border-rose-500/40 px-3 py-1 text-xs text-rose-300 hover:bg-rose-500/10">Sil</button>
+          </form>
+        </td>
+      </tr>
+      {{else}}
+      <tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">Hiç bağlantı yok.</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}

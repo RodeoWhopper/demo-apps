@@ -1,0 +1,70 @@
+# Kılavuz Etkinlik – Directus 11 events directory (API/admin on 8011) + static frontend (nginx on 8111)
+name: 11-directus-docker
+
+services:
+  database:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-directus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-demo-db}
+      POSTGRES_DB: ${POSTGRES_DB:-directus}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  directus:
+    image: directus/directus:11
+    restart: unless-stopped
+    ports:
+      - "8011:8055"
+    environment:
+      KEY: ${DIRECTUS_KEY:-change-me-demo-key}
+      SECRET: ${DIRECTUS_SECRET:-change-me-demo-secret-please-rotate-me}
+      # First admin user, created by Directus itself on the first boot (bootstrap)
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@kilavuz.dev}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
+      DB_CLIENT: pg
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_DATABASE: ${POSTGRES_DB:-directus}
+      DB_USER: ${POSTGRES_USER:-directus}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-change-me-demo-db}
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8011}
+      CORS_ENABLED: "true"
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      WEBSOCKETS_ENABLED: "false"
+      TELEMETRY: "false"
+    volumes:
+      - directus_uploads:/directus/uploads
+      - directus_extensions:/directus/extensions
+      # schema snapshot lives in the repo; used by `directus schema snapshot|apply`
+      - ./snapshot:/directus/snapshot
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8055/server/health >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  frontend:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "8111:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - directus
+
+volumes:
+  db_data:
+  directus_uploads:
+  directus_extensions:

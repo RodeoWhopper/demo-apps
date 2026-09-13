@@ -1,0 +1,20 @@
+# Sığınak – custom routing.
+# /newsletter/  → channel of posts tagged "newsletter" (issues of the weekly letter)
+# /archive/     → compact list of every post
+routes:
+  /newsletter/:
+    controller: channel
+    filter: tag:newsletter
+    template: newsletter
+  /archive/:
+    controller: channel
+    template: archive
+
+collections:
+  /:
+    permalink: /{slug}/
+    template: index
+
+taxonomies:
+  tag: /tag/{slug}/
+  author: /author/{slug}/

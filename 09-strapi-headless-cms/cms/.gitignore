@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+.cache/
+.tmp/
+.strapi/
+.strapi-updater.json
+.env
+public/uploads/*
+!public/uploads/.gitkeep
+*.log
+.DS_Store

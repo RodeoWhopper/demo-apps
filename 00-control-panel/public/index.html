@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Demo Apps Control Panel</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎛️</text></svg>" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">🎛️</span>
+      <div>
+        <h1>Demo Apps Control Panel</h1>
+        <p class="muted" id="rootPath">loading…</p>
+      </div>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Filter by name, stack, port…" autocomplete="off" />
+      <select id="kindFilter">
+        <option value="">All kinds</option>
+        <option value="static">static</option>
+        <option value="spa">spa</option>
+        <option value="ssr">ssr</option>
+        <option value="api">api</option>
+        <option value="fullstack">fullstack</option>
+        <option value="cms">cms</option>
+        <option value="compose">compose</option>
+      </select>
+      <label class="check"><input type="checkbox" id="onlyRunning" /> running only</label>
+      <button class="btn" id="startAll" title="docker compose up -d --build for every stopped app (2 builds at a time)">▶ Start all</button>
+      <button class="btn danger-outline" id="stopAll" title="docker compose down for every running app">■ Stop all</button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <main>
+    <section class="grid" id="grid" aria-live="polite"></section>
+  </main>
+
+  <aside class="activity collapsed" id="activity">
+    <div class="activity-head">
+      <strong>Activity</strong>
+      <span class="muted" id="jobCount"></span>
+      <button class="btn small ghost" id="toggleActivity" title="Collapse / expand">▴</button>
+    </div>
+    <div class="activity-body">
+      <ul class="jobs" id="jobs"></ul>
+      <pre class="console" id="console" data-empty="Select a job to see its output."></pre>
+    </div>
+  </aside>
+
+  <dialog id="dialog">
+    <div class="dialog-head">
+      <h2 id="dialogTitle"></h2>
+      <button class="btn small ghost" id="dialogClose" aria-label="Close">✕</button>
+    </div>
+    <div class="dialog-body" id="dialogBody"></div>
+  </dialog>
+
+  <div class="toasts" id="toasts"></div>
+
+  <template id="cardTpl">
+    <article class="card">
+      <header class="card-head">
+        <span class="num"></span>
+        <div class="titles">
+          <h3 class="title"></h3>
+          <p class="desc muted"></p>
+        </div>
+        <span class="status-pill"><span class="dot"></span><span class="status-text"></span></span>
+      </header>
+      <div class="tags"></div>
+      <div class="ports"></div>
+      <p class="detail muted"></p>
+      <ul class="containers"></ul>
+      <footer class="actions">
+        <button class="btn primary act" data-action="start">▶ Start</button>
+        <button class="btn act" data-action="stop">■ Stop</button>
+        <button class="btn act" data-action="restart">↻ Restart</button>
+        <button class="btn accent act setup" data-action="setup" hidden>⚙ Setup</button>
+        <button class="btn ghost logs">Logs</button>
+        <button class="btn ghost details">Details</button>
+        <div class="more">
+          <button class="btn ghost more-btn" aria-haspopup="menu">⋯</button>
+          <div class="menu" role="menu">
+            <button class="act" data-action="rebuild">Rebuild without cache</button>
+            <button class="readme">Open README</button>
+            <button class="act danger" data-action="reset">Reset (delete volumes)</button>
+          </div>
+        </div>
+      </footer>
+    </article>
+  </template>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.12/marked.min.js" defer></script>
+  <script src="/app.js" defer></script>
+</body>
+</html>

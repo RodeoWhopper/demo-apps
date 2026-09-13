@@ -1,0 +1,12 @@
+node_modules
+build
+.svelte-kit
+data/*.json
+.env
+.git
+.DS_Store
+npm-debug.log*
+README.md
+deploy.json
+Dockerfile
+.dockerignore

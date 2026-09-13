@@ -1,0 +1,35 @@
+{
+  "name": "dotnet-razor-helpdesk",
+  "folder": "18-dotnet-razor-helpdesk",
+  "title": "Masaüstü Destek – IT Helpdesk Ticketing",
+  "description": "An ASP.NET Core 10 Razor Pages helpdesk where requesters open and follow tickets and agents/admins triage them, using ASP.NET Core Identity cookie authentication with three roles, EF Core migrations on SQLite and folder-convention authorization.",
+  "kind": "ssr",
+  "stack": ["dotnet", "aspnet-core", "razor-pages", "identity", "ef-core", "sqlite"],
+  "runtime": "dotnet@10.0",
+  "port": 8018,
+  "extra_ports": [],
+  "install": "dotnet restore",
+  "build": "dotnet publish -c Release -o out /p:UseAppHost=false",
+  "start": "dotnet out/Helpdesk.dll",
+  "dev": "dotnet run",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/healthz", "expect_status": 200 },
+  "env": [
+    { "name": "ASPNETCORE_URLS", "required": false, "default": "http://0.0.0.0:8018", "description": "Listen address(es); the app falls back to 0.0.0.0:8018 when unset (Docker image sets http://+:8018)" },
+    { "name": "ASPNETCORE_ENVIRONMENT", "required": false, "default": "Production", "description": "Development shows developer exception pages; Production uses the /Error page" },
+    { "name": "ConnectionStrings__Default", "required": false, "default": "Data Source=data/helpdesk.db", "description": "SQLite connection string; the directory is created automatically and also holds the Data Protection keys (data/keys). Docker image sets Data Source=/app/data/helpdesk.db" }
+  ],
+  "auth": { "model": "server-session", "description": "ASP.NET Core Identity with cookie authentication (cookie 'masaustu.auth', 8 h sliding). Custom Razor Pages for /Account/Login, /Account/Logout (POST only) and /Account/Register using SignInManager/UserManager – no scaffolded Identity UI. Roles Admin / Agent / Requester; /Admin folder protected by the AdminOnly policy convention (AuthorizeFolder) plus [Authorize(Roles=\"Admin\")] on /Admin/Users; /Tickets requires a signed-in user and requesters only see/open their own tickets; status changes and assignment are Agent/Admin only. Antiforgery tokens on every POST. Unauthenticated → 302 /Account/Login, forbidden → 302 /AccessDenied (renders with HTTP 403)." },
+  "credentials": [
+    { "role": "admin", "username": "admin@masaustu.dev", "password": "Admin123!" },
+    { "role": "agent", "username": "agent@masaustu.dev", "password": "Agent123!" },
+    { "role": "requester", "username": "user@masaustu.dev", "password": "User123!" }
+  ],
+  "routes": {
+    "public": ["/", "/Account/Login", "/Account/Register", "/AccessDenied", "/Error", "/healthz", "/css/*"],
+    "authenticated": ["/Tickets", "/Tickets/Create", "/Tickets/Details/{id}", "/Account/Logout"],
+    "admin": ["/Admin/Users", "/Admin/Categories"]
+  },
+  "persistence": "SQLite file at data/helpdesk.db (WAL mode; /app/data/helpdesk.db in the container) created by EF Core migrations (Database.Migrate() at startup) and seeded with 3 roles, 3 users, 4 categories and 10 tickets when empty; Data Protection keys are stored in data/keys so cookies survive restarts",
+  "notes": "Requires the .NET 10 SDK to build (runtime image mcr.microsoft.com/dotnet/aspnet:10.0). Container runs as the non-root 'app' user (uid 1654); mount a writable volume at /app/data (named volume works out of the box, a bind mount must be writable by uid 1654). Run the app from a directory where wwwroot/ is available (publish output or project dir) – static CSS is served from wwwroot. Self-registration is open and creates Requester accounts."
+}

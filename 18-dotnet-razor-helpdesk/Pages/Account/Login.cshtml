@@ -1,0 +1,35 @@
+@page
+@model Helpdesk.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Giriş";
+}
+<div class="card auth-card p-4">
+    <h1 class="h3 mb-1">Giriş yap</h1>
+    <p class="text-muted small mb-3">ASP.NET Core Identity · çerez tabanlı oturum · antiforgery korumalı form</p>
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+        <input type="hidden" asp-for="ReturnUrl" />
+        <div class="mb-3">
+            <label asp-for="Input.Email" class="form-label">E-posta</label>
+            <input asp-for="Input.Email" class="form-control" autocomplete="username" autofocus />
+            <span asp-validation-for="Input.Email" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Input.Password" class="form-label">Şifre</label>
+            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" />
+            <span asp-validation-for="Input.Password" class="text-danger small"></span>
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="Input.RememberMe" class="form-check-input" />
+            <label asp-for="Input.RememberMe" class="form-check-label">Beni hatırla</label>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Giriş</button>
+    </form>
+    <hr />
+    <p class="small mb-1">Hesabınız yok mu? <a asp-page="/Account/Register">Kayıt olun</a></p>
+    <ul class="small text-muted mb-0">
+        <li><code>admin@masaustu.dev</code> / <code>Admin123!</code></li>
+        <li><code>agent@masaustu.dev</code> / <code>Agent123!</code></li>
+        <li><code>user@masaustu.dev</code> / <code>User123!</code></li>
+    </ul>
+</div>

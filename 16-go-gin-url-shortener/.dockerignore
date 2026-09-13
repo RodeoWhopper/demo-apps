@@ -1,0 +1,12 @@
+bin/
+data/
+*.db
+*.db-wal
+*.db-shm
+.env
+.git
+.gitignore
+README.md
+deploy.json
+Makefile
+.DS_Store

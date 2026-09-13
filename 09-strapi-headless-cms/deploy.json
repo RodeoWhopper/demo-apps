@@ -1,0 +1,41 @@
+{
+  "name": "strapi-headless-cms",
+  "folder": "09-strapi-headless-cms",
+  "title": "Tarla Journal — Strapi 5 headless CMS + static frontend",
+  "description": "Strapi 5 (TypeScript, SQLite) exposing articles/categories/authors over a public REST API, with public permissions and seed content created programmatically on first boot, plus a build-free static HTML/JS frontend served by nginx.",
+  "kind": "cms",
+  "stack": ["node", "strapi", "typescript", "sqlite", "nginx", "docker"],
+  "runtime": "node@22",
+  "port": 1337,
+  "extra_ports": [8009],
+  "install": "cd cms && npm ci",
+  "build": "cd cms && npm run build",
+  "start": "cd cms && npm run start",
+  "dev": "cd cms && npm run develop",
+  "docker": { "compose": "docker-compose.yml" },
+  "healthcheck": { "path": "/_health", "expect_status": 204 },
+  "env": [
+    { "name": "APP_KEYS", "required": true, "default": "demo-app-key-one,demo-app-key-two,demo-app-key-three,demo-app-key-four", "description": "Comma-separated session keys (demo values in cms/.env.example; generate with openssl rand -base64 32)" },
+    { "name": "API_TOKEN_SALT", "required": true, "default": "demo-api-token-salt", "description": "Salt for API tokens" },
+    { "name": "ADMIN_JWT_SECRET", "required": true, "default": "demo-admin-jwt-secret", "description": "Admin panel JWT secret" },
+    { "name": "TRANSFER_TOKEN_SALT", "required": true, "default": "demo-transfer-token-salt", "description": "Salt for transfer tokens" },
+    { "name": "JWT_SECRET", "required": true, "default": "demo-jwt-secret", "description": "users-permissions JWT secret" },
+    { "name": "ENCRYPTION_KEY", "required": true, "default": "demo-encryption-key-change-me", "description": "Key for encrypted settings" },
+    { "name": "HOST", "required": false, "default": "0.0.0.0", "description": "Bind address" },
+    { "name": "PORT", "required": false, "default": "1337", "description": "HTTP port" },
+    { "name": "DATABASE_CLIENT", "required": false, "default": "sqlite", "description": "sqlite | postgres | mysql" },
+    { "name": "DATABASE_FILENAME", "required": false, "default": ".tmp/data.db", "description": "SQLite file, relative to cms/" },
+    { "name": "CORS_ORIGIN", "required": false, "default": "*", "description": "Comma-separated browser origins allowed to call the API" }
+  ],
+  "auth": { "model": "cms-admin", "description": "Strapi admin panel (/admin) with JWT login via POST /admin/login. Public REST reads (find/findOne on article, category, author) are granted to the anonymous public role at boot; writes require an admin session or API token." },
+  "credentials": [
+    { "role": "admin", "username": "admin@tarla.dev", "password": "Admin123!" }
+  ],
+  "routes": {
+    "public": ["/_health", "/api/articles?populate=*", "/api/categories", "/api/authors", "/admin/login"],
+    "authenticated": ["/api/upload/files"],
+    "admin": ["/admin"]
+  },
+  "persistence": "SQLite at cms/.tmp/data.db (Docker volume cms_data at /opt/app/.tmp) auto-created and seeded on first boot; uploads in cms/public/uploads (Docker volume cms_uploads).",
+  "notes": "Two services: Strapi on 1337 (main) and the static frontend on 8009 (nginx, `frontend/` dir; locally any static server works). The admin user is NOT created automatically: after the first start run scripts/create-admin.sh (local) or scripts/create-admin.sh --docker (compose), or complete the form shown on the first visit to /admin. Health endpoint /_health returns 204 (not 200). The CMS Docker build compiles better-sqlite3 on alpine and takes several minutes. If the frontend is not served from localhost, set window.API_URL in frontend/config.js to the public CMS URL and set CORS_ORIGIN accordingly. Demo secrets are provided as compose fallbacks; override via cms/.env for real deployments."
+}

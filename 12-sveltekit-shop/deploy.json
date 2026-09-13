@@ -1,0 +1,39 @@
+{
+  "name": "sveltekit-shop",
+  "folder": "12-sveltekit-shop",
+  "title": "Terracotta Supply – plant-pot shop (SvelteKit 2 + Svelte 5)",
+  "description": "Fictional plant-pot e-commerce site: product catalogue, cookie-stored cart, checkout that writes orders to a JSON store, customer account area and an admin product CRUD, all built on SvelteKit form actions with a server-side cookie session resolved in hooks.server.ts.",
+  "kind": "ssr",
+  "stack": ["node", "sveltekit", "svelte", "typescript", "vite", "adapter-node", "bcryptjs"],
+  "runtime": "node@22",
+  "port": 3012,
+  "extra_ports": [],
+  "install": "npm ci",
+  "build": "npm run build",
+  "start": "npm start",
+  "dev": "npm run dev",
+  "docker": { "dockerfile": "Dockerfile" },
+  "healthcheck": { "path": "/healthz", "expect_status": 200 },
+  "env": [
+    { "name": "ORIGIN", "required": false, "default": "http://localhost:3012", "description": "Public origin of the site (scheme://host[:port]) as browsers see it. SvelteKit rejects form-action POSTs whose Origin header differs from it (403), so set it to the real public URL (e.g. https://shop.example.com) for anything other than localhost access. `npm start`/the image default it to http://localhost:3012 with a warning." },
+    { "name": "PORT", "required": false, "default": "3012", "description": "HTTP port of the adapter-node server." },
+    { "name": "HOST", "required": false, "default": "0.0.0.0", "description": "Bind address." },
+    { "name": "COOKIE_SECURE", "required": false, "default": "false", "description": "Set \"true\" behind HTTPS so session/cart cookies get the Secure flag (keep false for plain-HTTP smoke tests)." },
+    { "name": "DATA_DIR", "required": false, "default": "./data (Docker: /app/data)", "description": "Directory holding users.json, sessions.json, products.json and orders.json (auto-created and seeded on first request)." }
+  ],
+  "auth": {
+    "model": "server-session",
+    "description": "Cookie `tc_session` holds an opaque id looked up in a server-side Map (persisted to data/sessions.json, 7-day TTL) by hooks.server.ts, which sets event.locals.user. Login/register/logout are SvelteKit form actions (POST /login?/login, /register?/register, /logout). Route-group layouts enforce access: (account) redirects anonymous users 303 to /login?next=..., (admin) additionally requires role admin (403 otherwise). Passwords are bcryptjs hashes."
+  },
+  "credentials": [
+    { "role": "admin", "username": "owner@terracotta.shop", "password": "Owner123!" },
+    { "role": "customer", "username": "shopper@terracotta.shop", "password": "Shop123!" }
+  ],
+  "routes": {
+    "public": ["/", "/products", "/products/[slug]", "/cart", "/login", "/register", "/logout", "/healthz"],
+    "authenticated": ["/account", "/account/orders", "POST /cart?/checkout"],
+    "admin": ["/admin", "/admin/products"]
+  },
+  "persistence": "JSON files in data/ (DATA_DIR): users.json, products.json (10 seeded pots), orders.json, sessions.json - created and seeded on first request, rewritten atomically on change. The cart lives client-side in the `tc_cart` cookie.",
+  "notes": "Needs a writable DATA_DIR (Docker: mount a volume at /app/data). Set ORIGIN to the public URL or every form submission (login included) fails with 403 'Cross-site POST form submissions are forbidden'. For curl smoke tests send `Origin: http://localhost:3012` and `Accept: text/html` on action POSTs: e.g. `curl -c jar -H 'Origin: http://localhost:3012' -H 'Accept: text/html' -X POST 'http://localhost:3012/login?/login' -d 'email=shopper@terracotta.shop&password=Shop123!'` -> 303, then `curl -b jar http://localhost:3012/account` -> 200 (without the cookie: 303 to /login). Without `Accept: text/html` SvelteKit answers action POSTs with 200 + JSON ({\"type\":\"redirect\"|\"failure\",...}). Actions without fields (checkout, logout) still need a form-encoded body (`-d ''`), otherwise 415. `npm audit` lists 3 low advisories in transitive dev tooling only."
+}

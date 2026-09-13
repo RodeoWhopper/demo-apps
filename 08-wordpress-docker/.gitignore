@@ -1,0 +1,10 @@
+.env
+*.log
+.DS_Store
+# Everything under wp-content is provided by the named volume except the tracked theme + mu-plugins
+wp-content/*
+!wp-content/themes/
+wp-content/themes/*
+!wp-content/themes/cinar/
+!wp-content/mu-plugins/
+wp-content/uploads/

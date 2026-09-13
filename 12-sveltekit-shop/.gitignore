@@ -1,0 +1,11 @@
+node_modules/
+build/
+.svelte-kit/
+.output/
+vite.config.ts.timestamp-*
+data/*.json
+.env
+.env.*
+!.env.example
+.DS_Store
+npm-debug.log*
